@@ -22,7 +22,9 @@ package
 	{
 		[Embed (source = "../data/tiles.png")] private var tilesImage:Class;
 		[Embed (source = "../data/jump_particle.png")] private var jumpParticleImage:Class;
+		[Embed (source = "../data/background.png")] private var bgImage:Class;
 		[Embed (source = "../data/overlay.png")] private var overlayImage:Class;
+		
 		public var player:Player;
 		public var map:FlxTilemap;
 		public var shadowMap:BitmapData; 
@@ -32,12 +34,20 @@ package
 		public function GameState() 
 		{
 			super();
+			
+			var background:FlxSprite = new FlxSprite(0, 0, bgImage);
+			add(background);
+		
 			overlay = new FlxSprite();
 			overlay.loadGraphic(overlayImage, false, false, 300, 300);
 			
 			shadowMap = new BitmapData(FlxG.width, FlxG.height, true, 0x55000000);
 			player = new Player(50, 50);
 			add(player);
+			
+			var lantern:Lantern = new Lantern(0, 0);
+			player.holdObject = lantern;
+			
 			//add(overlay);
 			bgColor = 0xffd1dfe7;
 			map = new FlxTilemap();
@@ -63,6 +73,8 @@ package
 			map.loadMap(tilemap, tilesImage, 8, 8);
 			add(map);
 			
+			add(lantern);			
+			
 			particles = new FlxGroup();
 			add(particles);
 			// Populate with empty particles so we never have to create them on the fly
@@ -72,7 +84,7 @@ package
 		
 		override public function create():void 
 		{
-			FlxG.stage.quality = StageQuality.LOW;	// Removes anti-aliasing on the shadows. Not sure if it's better or worse. 
+			//FlxG.stage.quality = StageQuality.LOW;	// Removes anti-aliasing on the shadows. Not sure if it's better or worse. 
 			super.create();
 		}
 		
@@ -88,14 +100,14 @@ package
 			FlxU.collide(player, map);
 			
 		}
-		override public function render():void 
+		override public function postProcess():void 
 		{
 			drawShadows();
-			FlxG.buffer.draw(shadowMap, null,null, "multiply");
-			 //new ColorTransform(1,1,1,1,0,0,0,-128)
+			FlxG.buffer.draw(shadowMap, null,new ColorTransform(1,1,1,1,0,0,0,-128), "multiply");
+			 
 			
-			super.render();
-			FlxG.buffer.draw(overlay.pixels, new Matrix(1, 0, 0, 1, player.x - overlay.width / 2 + 4, player.y - overlay.height / 2 + 4), null, "multiply");
+			super.postProcess();
+			//FlxG.buffer.draw(overlay.pixels, new Matrix(1, 0, 0, 1, player.x - overlay.width / 2 + 4, player.y - overlay.height / 2 + 4), null, "multiply");
 		}
 		public function getTilesOnScreen():Array
 		{
@@ -105,8 +117,8 @@ package
 		public function drawShadows():void 
 		{
 			
-			var px:int = player.x + 4;
-			var py:int = player.y + 4;
+			var px:int = player.holdObject.x + 4;
+			var py:int = player.holdObject.y + 4;
 			
 			var s:Shape = new Shape();
 			for (var r:int = 0; r < map.widthInTiles; r++) {
@@ -156,11 +168,8 @@ package
 						var corner3:FlxPoint = new FlxPoint((corner1.x - px) * 100 + corner1.x, (corner1.y - py) * 100 + corner1.y);
 						var corner4:FlxPoint = new FlxPoint((corner2.x - px) * 100 + corner2.x, (corner2.y - py) * 100 + corner2.y);
 						
-						
-
-						//s.graphics.beginFill(0x4d3781, 1);
-						s.graphics.beginFill(0x000000, 1);
-						s.graphics.lineStyle(1, 0xff000000, 0);
+						s.graphics.beginFill(0xff4d3781, 1);
+						s.graphics.lineStyle(1, 0xff4d3781, 0);
 						
 						// 1 2 4 3
 						s.graphics.moveTo(corner1.x, corner1.y);
