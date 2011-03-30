@@ -23,6 +23,7 @@ package
 	{
 		[Embed (source = "../data/tiles.png")] private var tilesImage:Class;
 		[Embed (source = "../data/jump_particle.png")] private var jumpParticleImage:Class;
+		[Embed (source = "../data/doublejump_particle.png")] private var doublejumpParticleImage:Class;
 		[Embed (source = "../data/background.png")] private var bgImage:Class;
 		[Embed (source = "../data/overlay.png")] private var overlayImage:Class;
 		[Embed (source = "../data/light.png")] private var lightImage:Class;
@@ -42,15 +43,20 @@ package
 			var background:FlxSprite = new FlxSprite(0, 0, bgImage);
 			add(background);
 		
+			var tree:Tree = new Tree(30, 120);
+			add(tree);
+			
+			
 			overlay = new FlxSprite();
 			overlay.loadGraphic(overlayImage, false, false, 300, 300);
 			
 			shadowMap = new BitmapData(FlxG.width, FlxG.height, true, 0x55000000);
 			player = new Player(50, 50);
-
 			
 			lantern = new Lantern(50, 50);
 			player.holdObject = lantern;
+			
+			tree.growTarget = lantern;
 			
 			var lightEmission:FlxSprite = new FlxSprite(0, 0, lightImage);
 			lightEmission.blend = "screen";
@@ -99,9 +105,16 @@ package
 			super.create();
 		}
 		
-		public function addJumpParticle(x:int, y:int) : void
+		public function addJumpParticle(x:int, y:int, double:Boolean) : void
 		{
-			addParticle(x, y, jumpParticleImage, 8, 2, 0.2);
+			if (double)
+			{
+				addParticle(x, y, doublejumpParticleImage, 8, 2, 0.2);
+			}
+			else
+			{
+				addParticle(x, y, jumpParticleImage, 8, 2, 0.2);
+			}
 		}
 		
 		public function addLightParticle(x:int, y:int) : void
@@ -136,8 +149,6 @@ package
 		{
 			drawShadows();
 			FlxG.buffer.draw(shadowMap, null,new ColorTransform(1,1,1,1,0,0,0,-128), "multiply");
-			 
-			
 			super.postProcess();
 			//FlxG.buffer.draw(overlay.pixels, new Matrix(1, 0, 0, 1, player.x - overlay.width / 2 + 4, player.y - overlay.height / 2 + 4), null, "multiply");
 		}
@@ -191,7 +202,7 @@ package
 							rect.push(bl);
 							rect.push(tr);
 							extra = new FlxPoint(tl.x, tl.y);
-						}
+						}else { continue; }
 						
 
 					

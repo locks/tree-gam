@@ -24,6 +24,7 @@ package
 				frames.push(i);
 			}
 			frames.push(i);
+			this._animations = new Array();
 			addAnimation("default", frames, numFrames / lifetime, true);
 			this.x = x;
 			this.y = y;
