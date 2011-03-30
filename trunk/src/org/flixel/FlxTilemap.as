@@ -68,10 +68,10 @@ package org.flixel
 		protected var _pixels:BitmapData;
 		protected var _bbPixels:BitmapData;
 		protected var _bbKey:String;
-		protected var _data:Array;
+		public var _data:Array;
 		protected var _rects:Array;
-		protected var _tileWidth:uint;
-		protected var _tileHeight:uint;
+		public var _tileWidth:uint;
+		public var _tileHeight:uint;
 		protected var _block:FlxObject;
 		protected var _callbacks:Array;
 		protected var _screenRows:uint;
