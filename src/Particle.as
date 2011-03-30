@@ -30,6 +30,10 @@ package
 			this.age = 0;
 			this.lifetime = lifetime;
 			this.exists = true;
+			this.alpha = 1.0;
+			this.velocity.x = 0;
+			this.velocity.y = 0;
+			this.blend = "normal";
 			play("default", true);
 		}
 		

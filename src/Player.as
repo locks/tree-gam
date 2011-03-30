@@ -32,16 +32,9 @@
 		override public function update():void 
 		{			
 			updatePlayerInput();
-			updatePlayerAnim();
+			updatePlayerAnim();			
 			
 			super.update();
-			
-			// Position the lantern
-			if (holdObject != null)
-			{
-				holdObject.x = x + ((facing == RIGHT) ? 3 : -6);
-				holdObject.y = y + 0;
-			}			
 		}
 		
 		private function updatePlayerAnim():void
@@ -81,6 +74,8 @@
 				acceleration.y = 150;
 			}
 			if (onFloor) { acceleration.y = 150; }
+			
+			
 			if (FlxG.keys.RIGHT) {
 				velocity.x = 50;
 				facing = RIGHT
@@ -89,6 +84,27 @@
 				velocity.x = -50;
 				facing = LEFT;
 			}
+			
+			// Drop lantern
+			if (FlxG.keys.justPressed("DOWN"))
+			{
+				if (holdObject != null)
+				{
+					holdObject.velocity.x = velocity.x;
+					holdObject.velocity.y = velocity.y;
+					holdObject = null;
+				}
+				else 
+				{
+					var dx:Number = (FlxG.state as GameState).lantern.x - (x + 3);
+					var dy:Number = (FlxG.state as GameState).lantern.y - (y + 4);
+					if ((dx * dx + dy * dy) < 64)
+					{
+						holdObject = (FlxG.state as GameState).lantern;
+					}
+				}
+			}
+			
 		}
 	}
 

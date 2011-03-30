@@ -6,6 +6,7 @@ package
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
 	import org.flixel.FlxGroup;
+	import org.flixel.FlxObject;
 	import org.flixel.FlxPoint;
 	import org.flixel.FlxSprite;
 	import org.flixel.FlxState;
@@ -24,13 +25,16 @@ package
 		[Embed (source = "../data/jump_particle.png")] private var jumpParticleImage:Class;
 		[Embed (source = "../data/background.png")] private var bgImage:Class;
 		[Embed (source = "../data/overlay.png")] private var overlayImage:Class;
+		[Embed (source = "../data/light.png")] private var lightImage:Class;
+		[Embed (source = "../data/light_particle.png")] private var lightParticleImage:Class;
 		
 		public var player:Player;
+		public var lantern:Lantern;
 		public var map:FlxTilemap;
 		public var shadowMap:BitmapData; 
 		public var overlay:FlxSprite;
-		
 		public var particles:FlxGroup;
+		
 		public function GameState() 
 		{
 			super();
@@ -43,10 +47,17 @@ package
 			
 			shadowMap = new BitmapData(FlxG.width, FlxG.height, true, 0x55000000);
 			player = new Player(50, 50);
-			add(player);
+
 			
-			var lantern:Lantern = new Lantern(0, 0);
+			lantern = new Lantern(50, 50);
 			player.holdObject = lantern;
+			
+			var lightEmission:FlxSprite = new FlxSprite(0, 0, lightImage);
+			lightEmission.blend = "screen";
+			lightEmission.alpha = 0.5;
+			lantern.lightEmission = lightEmission;
+			add(lightEmission);
+			add(player);			
 			
 			//add(overlay);
 			bgColor = 0xffd1dfe7;
@@ -78,7 +89,7 @@ package
 			particles = new FlxGroup();
 			add(particles);
 			// Populate with empty particles so we never have to create them on the fly
-			for (var i:int = 0; i < 2; i++) { particles.add( new Particle() ); }
+			for (var i:int = 0; i < 50; i++) { particles.add( new Particle() ); }
 			
 		}
 		
@@ -93,11 +104,32 @@ package
 			addParticle(x, y, jumpParticleImage, 8, 2, 0.2);
 		}
 		
+		public function addLightParticle(x:int, y:int) : void
+		{
+			var p:Particle = addParticle(x, y, lightParticleImage, 1, 3, 0.75);
+			p.velocity.x = Math.random() * 30 - 15;
+			p.velocity.y = Math.random() * 30 - 15;
+		}
+		
 		override public function update():void 
 		{
+			// Position the lantern			
+			if (player.holdObject != null)
+			{
+				player.holdObject.x = player.x + ((player.facing == FlxSprite.RIGHT) ? 6 : -3);
+				while (map.overlaps(player.holdObject))
+				{
+					player.holdObject.x += ((player.facing == FlxSprite.RIGHT) ? -1 : 1);
+				}
+				player.holdObject.y = player.y + 3;
+				player.holdObject.velocity.y = 0;
+				player.holdObject.velocity.x = 0;
+			}
+			
 			super.update();
 			shadowMap.fillRect(new Rectangle(0, 0, FlxG.width, FlxG.height), 0xffffffff);
 			FlxU.collide(player, map);
+			FlxU.collide(lantern, map);
 			
 		}
 		override public function postProcess():void 
@@ -117,8 +149,8 @@ package
 		public function drawShadows():void 
 		{
 			
-			var px:int = player.holdObject.x + 4;
-			var py:int = player.holdObject.y + 4;
+			var px:int = lantern.x + 1;
+			var py:int = lantern.y + 1;
 			
 			var s:Shape = new Shape();
 			for (var r:int = 0; r < map.widthInTiles; r++) {
@@ -219,7 +251,7 @@ package
 			return [tl, tr, bl, br];
 		}
 		
-		private function addParticle(x:int, y:int, graphic:Class, width:int, numFrames:int, lifetime:Number):void
+		private function addParticle(x:int, y:int, graphic:Class, width:int, numFrames:int, lifetime:Number):Particle
 		{
 			var p:Particle = (Particle)(particles.getFirstAvail());
 			if (p == null)
@@ -227,6 +259,7 @@ package
 				p = (Particle)(particles.getRandom());
 			}
 			p.spawn(x, y, graphic, width, numFrames, lifetime);
+			return p;
 		}		
 	}
 
