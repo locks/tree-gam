@@ -3,9 +3,11 @@ package
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.ColorTransform;
+	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
 	import org.flixel.FlxGroup;
 	import org.flixel.FlxPoint;
+	import org.flixel.FlxSprite;
 	import org.flixel.FlxState;
 	import org.flixel.FlxTilemap;
 	import org.flixel.FlxU;
@@ -20,17 +22,23 @@ package
 	{
 		[Embed (source = "../data/tiles.png")] private var tilesImage:Class;
 		[Embed (source = "../data/jump_particle.png")] private var jumpParticleImage:Class;
+		[Embed (source = "../data/overlay.png")] private var overlayImage:Class;
 		public var player:Player;
 		public var map:FlxTilemap;
 		public var shadowMap:BitmapData; 
+		public var overlay:FlxSprite;
 		
 		public var particles:FlxGroup;
 		public function GameState() 
 		{
 			super();
+			overlay = new FlxSprite();
+			overlay.loadGraphic(overlayImage, false, false, 300, 300);
+			
 			shadowMap = new BitmapData(FlxG.width, FlxG.height, true, 0x55000000);
 			player = new Player(50, 50);
 			add(player);
+			//add(overlay);
 			bgColor = 0xffd1dfe7;
 			map = new FlxTilemap();
 			var tilemap:String = ( <![CDATA[
@@ -83,8 +91,11 @@ package
 		override public function render():void 
 		{
 			drawShadows();
-			FlxG.buffer.draw(shadowMap, null, new ColorTransform(1,1,1,1,0,0,0,-128), "multiply");
+			FlxG.buffer.draw(shadowMap, null,null, "multiply");
+			 //new ColorTransform(1,1,1,1,0,0,0,-128)
+			
 			super.render();
+			FlxG.buffer.draw(overlay.pixels, new Matrix(1, 0, 0, 1, player.x - overlay.width / 2 + 4, player.y - overlay.height / 2 + 4), null, "multiply");
 		}
 		public function getTilesOnScreen():Array
 		{
@@ -147,7 +158,8 @@ package
 						
 						
 
-						s.graphics.beginFill(0x4d3781, 1);
+						//s.graphics.beginFill(0x4d3781, 1);
+						s.graphics.beginFill(0x000000, 1);
 						s.graphics.lineStyle(1, 0xff000000, 0);
 						
 						// 1 2 4 3
