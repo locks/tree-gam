@@ -2,6 +2,7 @@ package
 {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.geom.ColorTransform;
 	import flash.geom.Rectangle;
 	import org.flixel.FlxPoint;
 	import org.flixel.FlxState;
@@ -25,25 +26,25 @@ package
 			shadowMap = new BitmapData(FlxG.width, FlxG.height, true, 0x55000000);
 			player = new Player(50, 50);
 			add(player);
-			bgColor = 0xfff4f0ff;
+			bgColor = 0xffd1dfe7;
 			map = new FlxTilemap();
 			var tilemap:String = ( <![CDATA[
-			1,1,1,1,1,1,1,1,1,1,1,1
-			1,0,0,0,0,0,1,0,0,0,0,1
-			1,0,0,0,1,0,1,0,0,0,0,1
-			1,0,0,0,0,0,0,0,0,1,0,1
-			1,1,1,1,0,0,0,0,0,0,0,1
-			1,1,1,0,0,0,0,0,0,1,0,1
-			1,1,0,0,0,1,0,0,0,1,0,1
-			1,0,0,0,0,1,0,0,0,0,0,1
+			1,1,1,1,1,1,6,1,1,1,1,1
+			1,0,0,0,0,0,5,0,0,0,0,1
+			1,0,0,0,3,0,4,0,0,0,0,1
+			1,0,0,0,0,0,0,0,0,3,0,1
+			1,6,6,1,0,0,0,0,0,0,0,1
+			1,1,1,0,0,0,0,0,0,8,0,1
+			1,2,0,0,0,6,0,0,0,3,0,1
+			2,0,0,0,0,4,0,0,0,0,0,1
 			1,0,0,0,0,0,0,0,0,0,0,1
-			1,0,0,0,0,1,1,1,0,0,0,1
-			1,0,1,0,0,1,0,1,1,0,0,1
-			1,0,1,0,0,1,0,1,1,0,0,1
-			1,0,1,0,0,1,0,1,1,0,0,1
-			1,0,1,0,0,0,0,0,0,0,0,1
-			1,0,0,0,0,0,0,1,0,0,1,1
-			1,1,1,1,1,1,1,1,1,1,1,1
+			1,0,0,0,0,7,8,9,0,0,0,1
+			2,0,6,0,0,1,0,1,2,0,0,1
+			1,0,5,0,0,2,0,2,1,0,0,1
+			1,0,5,0,0,1,0,1,2,0,0,1
+			1,0,4,0,0,0,0,0,0,0,0,1
+			1,0,0,0,0,0,0,8,0,0,7,1
+			1,2,1,2,2,3,1,1,1,1,1,1
 
 			]]> ).toString();
 			map.loadMap(tilemap, tilesImage, 8, 8);
@@ -52,13 +53,14 @@ package
 		override public function update():void 
 		{
 			super.update();
+			shadowMap.fillRect(new Rectangle(0, 0, FlxG.width, FlxG.height), 0xffffffff);
 			FlxU.collide(player, map);
-			shadowMap.fillRect(new Rectangle(0, 0, FlxG.width, FlxG.height), 0x55000000);
+			
 			drawShadows();
 		}
 		override public function postProcess():void 
 		{
-			FlxG.buffer.draw(shadowMap);
+			FlxG.buffer.draw(shadowMap, null, new ColorTransform(1,1,1,1,0,0,0,-128), "multiply");
 			super.postProcess();
 		}
 		public function getTilesOnScreen():Array
@@ -121,8 +123,8 @@ package
 						
 						
 
-						s.graphics.beginFill(0x000000, 0.5);
-						s.graphics.lineStyle(1, 0x55000000, 0.2);
+						s.graphics.beginFill(0x2d3781, 1);
+						s.graphics.lineStyle(1, 0xff000000, 0);
 						
 						// 1 2 4 3
 						s.graphics.moveTo(corner1.x, corner1.y);
@@ -140,6 +142,7 @@ package
 					}
 				}
 			}
+			/*
 			var q:Shape = new Shape();
 			for (r = 0; r < map.widthInTiles; r++) {
 				for (c = 0; c < map.heightInTiles; c++) {
@@ -148,15 +151,16 @@ package
 						map.ray(px, py, r * map._tileWidth + map._tileWidth / 2, c * map._tileHeight + map._tileHeight / 2, res);
 						if (res.x > -1 && res.y > -1) {
 							
-							q.graphics.beginFill(0xffff0000);
+							//q.graphics.beginFill(0xffff0000);
 							//q.graphics.drawRect(res.x * map._tileHeight, res.y * map._tileWidth, map._tileWidth, map._tileHeight);
-							q.graphics.drawRect(res.x, res.y, map._tileWidth, map._tileHeight);
-							q.graphics.endFill();
+							//q.graphics.drawRect(res.x, res.y, map._tileWidth, map._tileHeight);
+							//q.graphics.endFill();
 						}
 					}
 					
 				}
 			}
+			*/
 			shadowMap.draw(s);
 			//shadowMap.draw(q);
 		}
