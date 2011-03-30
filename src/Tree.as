@@ -12,7 +12,7 @@ package
 	 */
 	public class Tree extends FlxSprite
 	{
-		private const trunkColor:uint = 0xff00ff00;
+		private const trunkColor:uint = 0xff000000;
 		private const maxSize:Number = 200;
 		private const maxTrunkSize:Number = 4;
 		private const growRate:Number = 4;
@@ -32,7 +32,7 @@ package
 		public function Tree(x:int, y:int) 
 		{
 			super(x, y);
-			pixels = new BitmapData(300, 300, true, 0xffeeeeee);
+			pixels = new BitmapData(300, 300, true, 0x00ffffff);
 			offset.x = pixels.width / 2;
 			offset.y = pixels.height;
 			growTrunkSegment = new Shape();

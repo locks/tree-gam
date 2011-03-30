@@ -9,7 +9,7 @@ package
 	 */
 	public class TreeBranch 
 	{
-		private const branchColor:uint = 0x5500dd00;		
+		private const branchColor:uint = 0x55000000;		
 		
 		public var x:Number;
 		public var y:Number;

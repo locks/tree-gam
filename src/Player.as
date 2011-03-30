@@ -12,6 +12,7 @@
 		[Embed (source = "../data/player.png")] private var playerImage:Class;
 		
 		public var holdObject:FlxObject;
+		public var doubleJumped:Boolean;
 		
 		public function Player(x:int, y:int) 
 		{
@@ -27,6 +28,7 @@
 			width = 6;
 			height = 8;
 			holdObject = null;
+			doubleJumped = false;
 		}
 		
 		override public function update():void 
@@ -60,20 +62,19 @@
 		{
 			velocity.x = 0;
 			if (FlxG.keys.justPressed("UP") && onFloor) {
+
 				velocity.y = -60;
-				(FlxG.state as GameState).addJumpParticle(x-1, y);
+				(FlxG.state as GameState).addJumpParticle(x-1, y, false);
 			}
-			
-			// Jokey jetpack
-			if (FlxG.keys.UP && !onFloor && velocity.y > 20 && acceleration.y > 0)
+			if (FlxG.keys.justPressed("UP") && (!doubleJumped && holdObject == null) && !onFloor && velocity.y > -20) {
+				velocity.y = -80;
+				doubleJumped = true;
+				(FlxG.state as GameState).addJumpParticle(x-1, y, true);
+			}
+			if (onFloor)
 			{
-				acceleration.y = -40;
+				doubleJumped = false;
 			}
-			if (!FlxG.keys.UP) 
-			{
-				acceleration.y = 150;
-			}
-			if (onFloor) { acceleration.y = 150; }
 			
 			
 			if (FlxG.keys.RIGHT) {
