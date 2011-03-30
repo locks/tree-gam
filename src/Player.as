@@ -14,31 +14,26 @@
 			super(x, y);
 			loadGraphic(playerImage, true, true, 8, 8);
 			addAnimation("idle", [0], 0, true);
-			addAnimation("run", [1, 2, 3, 4], 10, true);
+			addAnimation("run", [1, 2, 3, 4], 15, true);
 			addAnimation("jump", [6,5], 2, false);
 			acceleration.y = 150;
 			maxVelocity.y = 80;
+			offset.x = 1;
+			offset.y = 0;
+			width = 6;
+			height = 8;
 		}
 		
 		override public function update():void 
+		{			
+			updatePlayerInput();
+			updatePlayerAnim();
+			super.update();
+		}
+		
+		private function updatePlayerAnim():void
 		{
-			
-			velocity.x = 0;
-			//velocity.y = 0;
-			if (FlxG.keys.justPressed("UP")) {
-				velocity.y = -60;
-			} if (FlxG.keys.RIGHT) {
-				velocity.x = 50;
-				facing = RIGHT
-			} else if (FlxG.keys.LEFT) {
-				velocity.x = -50;
-				facing = LEFT;
-			}
-			if (!onFloor)
-			{
-				play("jump");
-			}
-			else
+			if (onFloor)
 			{
 				if (velocity.x != 0)
 				{
@@ -47,15 +42,29 @@
 				else
 				{
 					play("idle");
-				}
+				}				
 			}
-			
-			
-			if (FlxG.keys.justReleased("C")) {
-				(FlxG.state as GameState).poot();
+			else
+			{
+				play("jump");
 			}
-			
-			super.update();
+		}
+		
+		private function updatePlayerInput():void
+		{
+			velocity.x = 0;
+			if (FlxG.keys.justPressed("UP") && onFloor) {
+				velocity.y = -60;
+				(FlxG.state as GameState).addJumpParticle(x-1, y);
+			}
+			if (FlxG.keys.RIGHT) {
+				velocity.x = 50;
+				facing = RIGHT
+			}
+			else if (FlxG.keys.LEFT) {
+				velocity.x = -50;
+				facing = LEFT;
+			}
 		}
 	}
 

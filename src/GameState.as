@@ -4,12 +4,14 @@ package
 	import flash.display.BitmapData;
 	import flash.geom.ColorTransform;
 	import flash.geom.Rectangle;
+	import org.flixel.FlxGroup;
 	import org.flixel.FlxPoint;
 	import org.flixel.FlxState;
 	import org.flixel.FlxTilemap;
 	import org.flixel.FlxU;
 	import org.flixel.FlxG;
 	import flash.display.Shape;
+	import flash.display.StageQuality;
 	/**
 	* ...
 	* @author Thomas Liu
@@ -17,9 +19,12 @@ package
 	public class GameState extends FlxState
 	{
 		[Embed (source = "../data/tiles.png")] private var tilesImage:Class;
+		[Embed (source = "../data/jump_particle.png")] private var jumpParticleImage:Class;
 		public var player:Player;
 		public var map:FlxTilemap;
 		public var shadowMap:BitmapData; 
+		
+		public var particles:FlxGroup;
 		public function GameState() 
 		{
 			super();
@@ -49,19 +54,37 @@ package
 			]]> ).toString();
 			map.loadMap(tilemap, tilesImage, 8, 8);
 			add(map);
+			
+			particles = new FlxGroup();
+			add(particles);
+			// Populate with empty particles so we never have to create them on the fly
+			for (var i:int = 0; i < 2; i++) { particles.add( new Particle() ); }
+			
 		}
+		
+		override public function create():void 
+		{
+			FlxG.stage.quality = StageQuality.LOW;	// Removes anti-aliasing on the shadows. Not sure if it's better or worse. 
+			super.create();
+		}
+		
+		public function addJumpParticle(x:int, y:int) : void
+		{
+			addParticle(x, y, jumpParticleImage, 8, 2, 0.2);
+		}
+		
 		override public function update():void 
 		{
 			super.update();
 			shadowMap.fillRect(new Rectangle(0, 0, FlxG.width, FlxG.height), 0xffffffff);
 			FlxU.collide(player, map);
 			
-			drawShadows();
 		}
-		override public function postProcess():void 
+		override public function render():void 
 		{
+			drawShadows();
 			FlxG.buffer.draw(shadowMap, null, new ColorTransform(1,1,1,1,0,0,0,-128), "multiply");
-			super.postProcess();
+			super.render();
 		}
 		public function getTilesOnScreen():Array
 		{
@@ -70,9 +93,10 @@ package
 		}
 		public function drawShadows():void 
 		{
+			
 			var px:int = player.x + 4;
 			var py:int = player.y + 4;
-
+			
 			var s:Shape = new Shape();
 			for (var r:int = 0; r < map.widthInTiles; r++) {
 				for (var c:int = 0; c < map.heightInTiles; c++) {
@@ -123,7 +147,7 @@ package
 						
 						
 
-						s.graphics.beginFill(0x2d3781, 1);
+						s.graphics.beginFill(0x4d3781, 1);
 						s.graphics.lineStyle(1, 0xff000000, 0);
 						
 						// 1 2 4 3
@@ -173,12 +197,16 @@ package
 			var br:FlxPoint = new FlxPoint(map.x + map._tileWidth * tx + map._tileWidth, map.y + map._tileHeight * ty + map._tileHeight);
 			return [tl, tr, bl, br];
 		}
-		public function poot(): void {
-			var p:FlxPoint = new FlxPoint();
-			map.ray(player.x +4, player.y + 4, 0, 0, p);
-			FlxG.log(p.x + ", " + p.y);
 		
-		}
+		private function addParticle(x:int, y:int, graphic:Class, width:int, numFrames:int, lifetime:Number):void
+		{
+			var p:Particle = (Particle)(particles.getFirstAvail());
+			if (p == null)
+			{
+				p = (Particle)(particles.getRandom());
+			}
+			p.spawn(x, y, graphic, width, numFrames, lifetime);
+		}		
 	}
 
 }
