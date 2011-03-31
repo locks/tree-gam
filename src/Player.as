@@ -35,7 +35,6 @@
 		{			
 			updatePlayerInput();
 			updatePlayerAnim();			
-			
 			super.update();
 		}
 		
@@ -61,22 +60,26 @@
 		private function updatePlayerInput():void
 		{
 			velocity.x = 0;
+			
+			// First jump (on the floor)
 			if (FlxG.keys.justPressed("UP") && onFloor) {
 
 				velocity.y = -60;
 				(FlxG.state as GameState).addJumpParticle(x-1, y, false);
 			}
+			
+			// Double jump (if you're not holding the lantern)
 			if (FlxG.keys.justPressed("UP") && (!doubleJumped && holdObject == null) && !onFloor && velocity.y > -20) {
 				velocity.y = -80;
 				doubleJumped = true;
 				(FlxG.state as GameState).addJumpParticle(x-1, y, true);
 			}
-			if (onFloor)
+			if (onFloor) // Reset double jump
 			{
 				doubleJumped = false;
 			}
 			
-			
+			// Horizontal movement
 			if (FlxG.keys.RIGHT) {
 				velocity.x = 50;
 				facing = RIGHT
@@ -86,16 +89,16 @@
 				facing = LEFT;
 			}
 			
-			// Drop lantern
+			// Drop/pick up lantern if you press down
 			if (FlxG.keys.justPressed("DOWN"))
 			{
 				if (holdObject != null)
 				{
-					holdObject.velocity.x = velocity.x;
-					holdObject.velocity.y = velocity.y;
+					holdObject.velocity.x = velocity.x * 2;
+					holdObject.velocity.y = velocity.y * 1.5;
 					holdObject = null;
 				}
-				else 
+				else // If you're within 8 pixel radius of the lantern you can grab it
 				{
 					var dx:Number = (FlxG.state as GameState).lantern.x - (x + 3);
 					var dy:Number = (FlxG.state as GameState).lantern.y - (y + 4);

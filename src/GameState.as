@@ -5,6 +5,7 @@ package
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
+	import flash.utils.Dictionary;
 	import org.flixel.FlxGroup;
 	import org.flixel.FlxObject;
 	import org.flixel.FlxPoint;
@@ -15,6 +16,8 @@ package
 	import org.flixel.FlxG;
 	import flash.display.Shape;
 	import flash.display.StageQuality;
+	import flash.utils.getDefinitionByName;
+	import flash.utils.getQualifiedClassName;
 	/**
 	* ...
 	* @author Thomas Liu
@@ -28,6 +31,8 @@ package
 		[Embed (source = "../data/overlay.png")] private var overlayImage:Class;
 		[Embed (source = "../data/light.png")] private var lightImage:Class;
 		[Embed (source = "../data/light_particle.png")] private var lightParticleImage:Class;
+		[Embed (source = "../data/tree_particle.png")] private var treeParticleImage:Class;
+		
 		
 		public var player:Player;
 		public var lantern:Lantern;
@@ -35,9 +40,15 @@ package
 		public var shadowMap:BitmapData; 
 		public var overlay:FlxSprite;
 		public var particles:FlxGroup;
+		public var entities:FlxGroup;
+		
+		public var mapEntities:Object = {
+			100 : FirePit
+		}
 		
 		public function GameState() 
 		{
+			
 			super();
 			
 			var background:FlxSprite = new FlxSprite(0, 0, bgImage);
@@ -65,6 +76,9 @@ package
 			add(lightEmission);
 			add(player);			
 			
+			entities = new FlxGroup();
+			add(entities);
+			
 			//add(overlay);
 			bgColor = 0xffd1dfe7;
 			map = new FlxTilemap();
@@ -79,7 +93,7 @@ package
 			2,0,0,0,0,4,0,0,0,0,0,1
 			1,0,0,0,0,0,0,0,0,0,0,1
 			1,0,0,0,0,7,8,9,0,0,0,1
-			2,0,6,0,0,1,0,1,2,0,0,1
+			2,0,6,0,0,1,0,1,100,0,0,1
 			1,0,5,0,0,2,0,2,1,0,0,1
 			1,0,5,0,0,1,0,1,2,0,0,1
 			1,0,4,0,0,0,0,0,0,0,0,1
@@ -101,7 +115,7 @@ package
 		
 		override public function create():void 
 		{
-			//FlxG.stage.quality = StageQuality.LOW;	// Removes anti-aliasing on the shadows. Not sure if it's better or worse. 
+			replaceEntityTiles();
 			super.create();
 		}
 		
@@ -115,6 +129,16 @@ package
 			{
 				addParticle(x, y, jumpParticleImage, 8, 2, 0.2);
 			}
+		}
+		
+		public function addTreeParticle(x:int, y:int) : void
+		{
+			var p:Particle = addParticle(x, y, treeParticleImage, 1, 4, 2);
+			p.velocity.x = Math.random() * 50 - 25;
+			p.velocity.y = Math.random() * 50 - 25;
+			p.drag.x = 33;
+			p.drag.y = 33;
+			p.alpha = 0.5;
 		}
 		
 		public function addLightParticle(x:int, y:int) : void
@@ -143,6 +167,7 @@ package
 			shadowMap.fillRect(new Rectangle(0, 0, FlxG.width, FlxG.height), 0xffffffff);
 			FlxU.collide(player, map);
 			FlxU.collide(lantern, map);
+			FlxU.collide(player, entities);
 			
 		}
 		override public function postProcess():void 
@@ -272,6 +297,28 @@ package
 			p.spawn(x, y, graphic, width, numFrames, lifetime);
 			return p;
 		}		
+		
+		private function replaceEntityTiles() : void
+		{
+			for (var i:int = 0; i < map.totalTiles; i++)
+			{
+				for ( var keyS:String in mapEntities )
+				{
+					var key:int = parseInt(keyS);
+					if (key == map.getTileByIndex(i) && key != 0)
+					{
+						map.setTileByIndex(i, 0);
+						var x:int = i % map.widthInTiles;
+						var y:int = i / map.widthInTiles;
+						var c:Class = getDefinitionByName(getQualifiedClassName(mapEntities[keyS])) as Class;
+						var o:FlxObject = (new c(x * 8, y * 8) as FlxObject);
+						o.fixed = true;
+						entities.add(o);
+					}
+					
+				}
+			}
+		}
 	}
 
 }
