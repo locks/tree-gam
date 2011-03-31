@@ -19,7 +19,7 @@ package
 		private const growAngleChangeRate:Number = Math.PI / 4;
 		
 		private var growTrunkWidth:Number = 0;
-		private var growAngle:Number = Math.PI / 2; // Up
+		private var growAngle:Number = Math.PI; // Up
 		private var growTrunkSegment:Shape;
 		private var growPosition:Point = new Point(0,0);
 		private var currentSize:Number = 0;
@@ -69,29 +69,44 @@ package
 			
 			currentSize += growRate * FlxG.elapsed;
 			
-			// Figure out the direction to the target and update the angle
+			// Find out if the growth position is in shadow
+			var shadow:BitmapData = (FlxG.state as GameState).shadowMap;
+			var inShadow:Boolean = shadow.getPixel32(((x + FlxG.scroll.x) + (growPosition.x - offset.x)), ((y - FlxG.scroll.y) + (growPosition.y - offset.y))) != 0xffffffff;
+			
 			if (growTarget != null)
 			{
+				// Figure out the direction to the target and update the angle
 				var toTargetX:Number = growTarget.x - (x + (growPosition.x - offset.x));
 				var toTargetY:Number = growTarget.y - (y + (growPosition.y - offset.y));
 				var toTargetAngle:Number = Math.atan2(toTargetX, toTargetY);
 				var angleDiff:Number = angleDifference(toTargetAngle, growAngle);
 				if (angleDiff < 0)
 				{
-					growAngle += growAngleChangeRate * FlxG.elapsed;
+					growAngle += growAngleChangeRate * FlxG.elapsed * (inShadow ? 0.5 : 1.5);
 				}
 				else
 				{
-					growAngle -= growAngleChangeRate * FlxG.elapsed;
+					growAngle -= growAngleChangeRate * FlxG.elapsed * (inShadow ? 0.5 : 1.5);
 				}
 				
 			}
 			
 			// Offset by the vector it's growing in
-			var growX:Number = Math.sin(growAngle) * FlxG.elapsed * growRate;
-			var growY:Number = Math.cos(growAngle) * FlxG.elapsed * growRate;
-			growPosition = growPosition.add(new Point(growX, growY));			
+			var growX:Number = Math.sin(growAngle) * FlxG.elapsed * growRate * (inShadow ? 0.5 : 1.5);
+			var growY:Number = Math.cos(growAngle) * FlxG.elapsed * growRate * (inShadow ? 0.5 : 1.5);
+			var newPosition:Point = growPosition.add(new Point(growX, growY));
+			var tilemap:FlxTilemap = (FlxG.state as GameState).map;
+			var tileX:int = Math.floor((x + (newPosition.x - offset.x)) / tilemap._tileWidth);
+			var tileY:int = Math.floor((y + (newPosition.y - offset.y)) / tilemap._tileHeight);				
+			// Don't grow if we're hitting a tile
+			if (!tilemap.getTile(tileX, tileY))
+			{
+				growPosition = newPosition
+			}
 			
+			(FlxG.state as GameState).addTreeParticle((x + (growPosition.x - offset.x + growX)), (y + (growPosition.y - offset.y + growY)));
+			
+
 			// Update the trunk circle
 			growTrunkSegment.graphics.clear();
 			growTrunkSegment.graphics.beginFill( trunkColor );

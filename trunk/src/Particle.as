@@ -26,6 +26,7 @@ package
 			frames.push(i);
 			this._animations = new Array();
 			addAnimation("default", frames, numFrames / lifetime, true);
+			
 			this.x = x;
 			this.y = y;
 			this.age = 0;
@@ -35,6 +36,8 @@ package
 			this.velocity.x = 0;
 			this.velocity.y = 0;
 			this.blend = "normal";
+			drag.x = 0;
+			drag.y = 0;
 			play("default", true);
 		}
 		
@@ -43,8 +46,6 @@ package
 			age += FlxG.elapsed;
 			if (age >= lifetime) { kill(); }
 			super.update();
-		}
-		
+		}	
 	}
-
 }
