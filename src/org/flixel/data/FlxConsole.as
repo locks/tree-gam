@@ -86,7 +86,7 @@ package org.flixel.data
 			_by = Y*Zoom;
 			_byt = _by - FlxG.height*Zoom;
 			_YT = _Y = y = _byt;
-			var tmp:Bitmap = new Bitmap(new BitmapData(FlxG.width*Zoom,FlxG.height*Zoom,true,0x7F000000));
+			var tmp:Bitmap = new Bitmap(new BitmapData(FlxG.width*Zoom,FlxG.height*Zoom,true,0x40ff0000));
 			addChild(tmp);
 			
 			mtrUpdate = new FlxMonitor(8);
@@ -106,8 +106,8 @@ package org.flixel.data
 			addChild(_text);
 
 			_fpsDisplay = new TextField();
-			_fpsDisplay.width = 100;
-			_fpsDisplay.x = tmp.width-100;
+			_fpsDisplay.width = 50;
+			_fpsDisplay.x = tmp.width-50;
 			_fpsDisplay.height = 20;
 			_fpsDisplay.multiline = true;
 			_fpsDisplay.wordWrap = true;
@@ -115,7 +115,7 @@ package org.flixel.data
 			_fpsDisplay.selectable = false;
 			_fpsDisplay.antiAliasType = AntiAliasType.NORMAL;
 			_fpsDisplay.gridFitType = GridFitType.PIXEL;
-			_fpsDisplay.defaultTextFormat = new TextFormat("system",16,0xffffff,true,null,null,null,null,"right");
+			_fpsDisplay.defaultTextFormat = new TextFormat("system", 16, 0xffffffff, true, null, null, null, null, "right");
 			addChild(_fpsDisplay);
 			
 			_extraDisplay = new TextField();
