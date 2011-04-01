@@ -41,6 +41,7 @@ package
 		public var overlay:FlxSprite;
 		public var particles:FlxGroup;
 		public var entities:FlxGroup;
+		public var editMode:EditMode;
 		
 		public var mapEntities:Object = {
 			100 : FirePit
@@ -110,11 +111,14 @@ package
 			add(particles);
 			// Populate with empty particles so we never have to create them on the fly
 			for (var i:int = 0; i < 50; i++) { particles.add( new Particle() ); }
-			
+		
+			editMode = new EditMode();
+			add(editMode);
 		}
 		
 		override public function create():void 
 		{
+			editMode.initialize();
 			replaceEntityTiles();
 			super.create();
 		}
@@ -150,6 +154,12 @@ package
 		
 		override public function update():void 
 		{
+			
+			if (FlxG.keys.justPressed("Q"))
+			{
+				editMode.toggle();
+			}
+			
 			// Position the lantern			
 			if (player.holdObject != null)
 			{
@@ -168,11 +178,15 @@ package
 			FlxU.collide(player, map);
 			FlxU.collide(lantern, map);
 			FlxU.collide(player, entities);
+			FlxU.collide(lantern, entities);
 			
 		}
 		override public function postProcess():void 
 		{
-			drawShadows();
+			if (!editMode.enabled)
+			{
+				drawShadows();
+			}
 			FlxG.buffer.draw(shadowMap, null,new ColorTransform(1,1,1,1,0,0,0,-128), "multiply");
 			super.postProcess();
 			//FlxG.buffer.draw(overlay.pixels, new Matrix(1, 0, 0, 1, player.x - overlay.width / 2 + 4, player.y - overlay.height / 2 + 4), null, "multiply");

@@ -11,6 +11,10 @@
 	{
 		[Embed (source = "../data/player.png")] private var playerImage:Class;
 		
+		public const jumpForce:Number = 70;
+		public const doubleJumpForce:Number = 70;
+		public const walkSpeed:Number = 50;
+		
 		public var holdObject:FlxObject;
 		public var doubleJumped:Boolean;
 		
@@ -63,14 +67,13 @@
 			
 			// First jump (on the floor)
 			if (FlxG.keys.justPressed("UP") && onFloor) {
-
-				velocity.y = -60;
+				velocity.y = -jumpForce;
 				(FlxG.state as GameState).addJumpParticle(x-1, y, false);
 			}
 			
 			// Double jump (if you're not holding the lantern)
 			if (FlxG.keys.justPressed("UP") && (!doubleJumped && holdObject == null) && !onFloor && velocity.y > -20) {
-				velocity.y = -80;
+				velocity.y = -doubleJumpForce;
 				doubleJumped = true;
 				(FlxG.state as GameState).addJumpParticle(x-1, y, true);
 			}
@@ -81,11 +84,11 @@
 			
 			// Horizontal movement
 			if (FlxG.keys.RIGHT) {
-				velocity.x = 50;
+				velocity.x = walkSpeed;
 				facing = RIGHT
 			}
 			else if (FlxG.keys.LEFT) {
-				velocity.x = -50;
+				velocity.x = -walkSpeed;
 				facing = LEFT;
 			}
 			
@@ -94,7 +97,7 @@
 			{
 				if (holdObject != null)
 				{
-					holdObject.velocity.x = velocity.x * 2;
+					holdObject.velocity.x = velocity.x * 1.5;
 					holdObject.velocity.y = velocity.y * 1.5;
 					holdObject = null;
 				}
