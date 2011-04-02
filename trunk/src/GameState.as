@@ -34,7 +34,7 @@ package
 		[Embed (source = "../data/light_particle.png")] private var lightParticleImage:Class;
 		[Embed (source = "../data/tree_particle.png")] private var treeParticleImage:Class;
 		
-		[Embed (source = "../data/testmap.txt", mimeType="application/octet-stream")] private var openmapData:Class;
+		[Embed (source = "../data/openmap.txt", mimeType="application/octet-stream")] private var openmapData:Class;
 		
 		public var player:Player;
 		public var lantern:Lantern;
@@ -44,6 +44,8 @@ package
 		public var particles:FlxGroup;
 		public var entities:FlxGroup;
 		public var editMode:EditMode;
+		
+		public var ending:Boolean = false;
 		
 		public var mapEntities:Object = {
 			100 : FirePit
@@ -74,11 +76,12 @@ package
 			particles = new FlxGroup();
 
 			// Populate with empty particles so we never have to create them on the fly
-			for (var i:int = 0; i < 50; i++) { particles.add( new Particle() ); }
+			for (var i:int = 0; i < 150; i++) { particles.add( new Particle() ); }
 		
 			editMode = new EditMode();
 			
 			add(background);
+
 			add(tree);
 			add(lightEmission);
 			add(player);			
@@ -86,7 +89,10 @@ package
 			add(map);
 			add(lantern);		
 			add(particles);		
-			add(editMode);			
+			add(tree.warningSprite);						
+			add(editMode);	
+			
+			
 		}
 		
 		override public function create():void 
@@ -95,11 +101,12 @@ package
 			replaceEntityTiles();
 			FlxG.follow(player, 10);
 			FlxG.followBounds(0, 0, map.width, map.height);
+			FlxG.flash.start(0xff000000, 1);
+			FlxG.stage.quality = StageQuality.MEDIUM;
 		}
 		
 		override public function update():void 
 		{
-			
 			if (FlxG.keys.justPressed("Q"))
 			{
 				editMode.toggle();
@@ -124,7 +131,6 @@ package
 			{
 				drawShadows();
 			}			
-			
 			
 			FlxU.collide(player, map);
 			FlxU.collide(lantern, map);
@@ -236,7 +242,7 @@ package
 		
 		public function addTreeParticle(x:int, y:int) : void
 		{
-			var p:Particle = addParticle(x, y, treeParticleImage, 1, 4, 1);
+			var p:Particle = addParticle(x, y, treeParticleImage, 1, 4, 0.5);
 			p.velocity.x = Math.random() * 50 - 25;
 			p.velocity.y = Math.random() * 50 - 25;
 			p.drag.x = 30;
@@ -250,6 +256,12 @@ package
 			p.velocity.x = Math.random() * 30 - 15;
 			p.velocity.y = Math.random() * 30 - 15;
 		}		
+		
+		public function restart() : void
+		{
+			FlxG.timeScale = 1.0;
+			FlxG.state = new GameState();
+		}
 		
 		private function getScreenXY(x:int, y:int):FlxPoint
 		{
