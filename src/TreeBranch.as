@@ -9,7 +9,7 @@ package
 	 */
 	public class TreeBranch 
 	{
-		private const branchColor:uint = 0x55000000;		
+		private const branchColor:uint = 0x550e4a1d;		
 		
 		public var x:Number;
 		public var y:Number;
@@ -33,7 +33,7 @@ package
 		{
 			if (width > 0.3)
 			{
-				width *= 0.99;
+				width *= 0.985;
 			}
 			else
 			{

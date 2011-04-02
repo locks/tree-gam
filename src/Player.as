@@ -37,7 +37,14 @@
 		
 		override public function update():void 
 		{			
-			updatePlayerInput();
+			if ((FlxG.state as GameState).ending)
+			{
+				velocity.x = 0;
+			}
+			else
+			{
+				updatePlayerInput();
+			}
 			updatePlayerAnim();			
 			super.update();
 		}
