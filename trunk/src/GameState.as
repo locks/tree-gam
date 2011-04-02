@@ -5,6 +5,7 @@ package
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
+	import flash.geom.Transform;
 	import flash.utils.Dictionary;
 	import org.flixel.FlxGroup;
 	import org.flixel.FlxObject;
@@ -33,6 +34,7 @@ package
 		[Embed (source = "../data/light_particle.png")] private var lightParticleImage:Class;
 		[Embed (source = "../data/tree_particle.png")] private var treeParticleImage:Class;
 		
+		[Embed (source = "../data/testmap.txt", mimeType="application/octet-stream")] private var openmapData:Class;
 		
 		public var player:Player;
 		public var lantern:Lantern;
@@ -49,107 +51,50 @@ package
 		
 		public function GameState() 
 		{
+			bgColor = 0xffd1dfe7;
 			
-			super();
-			
-			var background:FlxSprite = new FlxSprite(0, 0, bgImage);
-			add(background);
-		
-			var tree:Tree = new Tree(30, 120);
-			add(tree);
-			
-			
-			overlay = new FlxSprite();
-			overlay.loadGraphic(overlayImage, false, false, 300, 300);
-			
+			entities = new FlxGroup();
 			shadowMap = new BitmapData(FlxG.width, FlxG.height, true, 0x55000000);
 			player = new Player(50, 50);
-			
 			lantern = new Lantern(50, 50);
-			player.holdObject = lantern;
-			
-			tree.growTarget = lantern;
-			
+			var background:FlxSprite = new FlxSprite(0, 0, bgImage);
+			var tree:Tree = new Tree(30, 120);			
 			var lightEmission:FlxSprite = new FlxSprite(0, 0, lightImage);
+			
 			lightEmission.blend = "screen";
 			lightEmission.alpha = 0.5;
 			lantern.lightEmission = lightEmission;
-			add(lightEmission);
-			add(player);			
 			
-			entities = new FlxGroup();
-			add(entities);
-			
-			//add(overlay);
-			bgColor = 0xffd1dfe7;
-			map = new FlxTilemap();
-			var tilemap:String = ( <![CDATA[
-			1,1,1,1,1,1,6,1,1,1,1,1
-			1,0,0,0,0,0,5,0,0,0,0,1
-			1,0,0,0,3,0,4,0,0,0,0,1
-			1,0,0,0,0,0,0,0,0,3,0,1
-			1,6,6,1,0,0,0,0,0,0,0,1
-			1,1,1,0,0,0,0,0,0,8,0,1
-			1,2,0,0,0,6,0,0,0,3,0,1
-			2,0,0,0,0,4,0,0,0,0,0,1
-			1,0,0,0,0,0,0,0,0,0,0,1
-			1,0,0,0,0,7,8,9,0,0,0,1
-			2,0,6,0,0,1,0,1,100,0,0,1
-			1,0,5,0,0,2,0,2,1,0,0,1
-			1,0,5,0,0,1,0,1,2,0,0,1
-			1,0,4,0,0,0,0,0,0,0,0,1
-			1,0,0,0,0,0,0,8,0,0,7,1
-			1,2,1,2,2,3,1,1,1,1,1,1
+			player.holdObject = lantern;
+			tree.growTarget = lantern;
 
-			]]> ).toString();
-			map.loadMap(tilemap, tilesImage, 8, 8);
-			add(map);
-			
-			add(lantern);			
-			
+			map = new FlxTilemap();		
+			map.loadMap(new openmapData, tilesImage, 8, 8);
+
 			particles = new FlxGroup();
-			add(particles);
+
 			// Populate with empty particles so we never have to create them on the fly
 			for (var i:int = 0; i < 50; i++) { particles.add( new Particle() ); }
 		
 			editMode = new EditMode();
-			add(editMode);
+			
+			add(background);
+			add(tree);
+			add(lightEmission);
+			add(player);			
+			add(entities);	
+			add(map);
+			add(lantern);		
+			add(particles);		
+			add(editMode);			
 		}
 		
 		override public function create():void 
 		{
 			editMode.initialize();
 			replaceEntityTiles();
-			super.create();
-		}
-		
-		public function addJumpParticle(x:int, y:int, double:Boolean) : void
-		{
-			if (double)
-			{
-				addParticle(x, y, doublejumpParticleImage, 8, 2, 0.2);
-			}
-			else
-			{
-				addParticle(x, y, jumpParticleImage, 8, 2, 0.2);
-			}
-		}
-		
-		public function addTreeParticle(x:int, y:int) : void
-		{
-			var p:Particle = addParticle(x, y, treeParticleImage, 1, 4, 2);
-			p.velocity.x = Math.random() * 50 - 25;
-			p.velocity.y = Math.random() * 50 - 25;
-			p.drag.x = 33;
-			p.drag.y = 33;
-			p.alpha = 0.5;
-		}
-		
-		public function addLightParticle(x:int, y:int) : void
-		{
-			var p:Particle = addParticle(x, y, lightParticleImage, 1, 3, 0.75);
-			p.velocity.x = Math.random() * 30 - 15;
-			p.velocity.y = Math.random() * 30 - 15;
+			FlxG.follow(player, 10);
+			FlxG.followBounds(0, 0, map.width, map.height);
 		}
 		
 		override public function update():void 
@@ -175,27 +120,30 @@ package
 			
 			super.update();
 			shadowMap.fillRect(new Rectangle(0, 0, FlxG.width, FlxG.height), 0xffffffff);
+			if (!editMode.enabled)
+			{
+				drawShadows();
+			}			
+			
+			
 			FlxU.collide(player, map);
 			FlxU.collide(lantern, map);
 			FlxU.collide(player, entities);
 			FlxU.collide(lantern, entities);
 			
 		}
+		
 		override public function postProcess():void 
 		{
-			if (!editMode.enabled)
-			{
-				drawShadows();
-			}
 			FlxG.buffer.draw(shadowMap, null,new ColorTransform(1,1,1,1,0,0,0,-128), "multiply");
 			super.postProcess();
-			//FlxG.buffer.draw(overlay.pixels, new Matrix(1, 0, 0, 1, player.x - overlay.width / 2 + 4, player.y - overlay.height / 2 + 4), null, "multiply");
 		}
+		
 		public function getTilesOnScreen():Array
 		{
-			//map.g
 			return map._data;
 		}
+		
 		public function drawShadows():void 
 		{
 			
@@ -208,10 +156,10 @@ package
 					var corners:Array = getCorners(r, c);
 					if (map.getTile(r, c) != 0) {
 						var rect:Array = new Array();
-						var tl:FlxPoint = corners[0];
-						var tr:FlxPoint = corners[1];
-						var bl:FlxPoint = corners[2];
-						var br:FlxPoint = corners[3];
+						var tl:FlxPoint = corners[0]
+						var tr:FlxPoint = corners[1]
+						var bl:FlxPoint = corners[2]
+						var br:FlxPoint = corners[3]
 						var extra:FlxPoint = null;
 						if (px <= tl.x && py <= tl.y) {
 							rect.push(tr);
@@ -269,37 +217,56 @@ package
 					}
 				}
 			}
-			/*
-			var q:Shape = new Shape();
-			for (r = 0; r < map.widthInTiles; r++) {
-				for (c = 0; c < map.heightInTiles; c++) {
-					if (map.getTile(r, c) != 0) {
-						var res:FlxPoint = new FlxPoint(-1, -1);
-						map.ray(px, py, r * map._tileWidth + map._tileWidth / 2, c * map._tileHeight + map._tileHeight / 2, res);
-						if (res.x > -1 && res.y > -1) {
-							
-							//q.graphics.beginFill(0xffff0000);
-							//q.graphics.drawRect(res.x * map._tileHeight, res.y * map._tileWidth, map._tileWidth, map._tileHeight);
-							//q.graphics.drawRect(res.x, res.y, map._tileWidth, map._tileHeight);
-							//q.graphics.endFill();
-						}
-					}
-					
-				}
+			var screenPt:FlxPoint = getScreenXY(0, 0);
+			var mtx:Matrix = new Matrix(1, 0, 0, 1, screenPt.x, screenPt.y);
+			shadowMap.draw(s, mtx);
+		}	
+		
+		public function addJumpParticle(x:int, y:int, double:Boolean) : void
+		{
+			if (double)
+			{
+				addParticle(x, y, doublejumpParticleImage, 8, 2, 0.2);
 			}
-			*/
-			shadowMap.draw(s);
-			//shadowMap.draw(q);
+			else
+			{
+				addParticle(x, y, jumpParticleImage, 8, 2, 0.2);
+			}
 		}
 		
-		public function getCorners(tx:int, ty:int): Array 
+		public function addTreeParticle(x:int, y:int) : void
+		{
+			var p:Particle = addParticle(x, y, treeParticleImage, 1, 4, 1);
+			p.velocity.x = Math.random() * 50 - 25;
+			p.velocity.y = Math.random() * 50 - 25;
+			p.drag.x = 30;
+			p.drag.y = 30;
+			p.alpha = 0.5;
+		}
+		
+		public function addLightParticle(x:int, y:int) : void
+		{
+			var p:Particle = addParticle(x, y, lightParticleImage, 1, 3, 0.75);
+			p.velocity.x = Math.random() * 30 - 15;
+			p.velocity.y = Math.random() * 30 - 15;
+		}		
+		
+		private function getScreenXY(x:int, y:int):FlxPoint
+		{
+			var Point:FlxPoint = new FlxPoint();
+			Point.x = FlxU.floor(x + FlxU.roundingError)+FlxU.floor(FlxG.scroll.x);
+			Point.y = FlxU.floor(y + FlxU.roundingError)+FlxU.floor(FlxG.scroll.y);
+			return Point;
+		}
+		
+		private function getCorners(tx:int, ty:int): Array 
 		{
 			var tl:FlxPoint = new FlxPoint(map.x + map._tileWidth * tx, map.y + map._tileHeight * ty);
 			var tr:FlxPoint = new FlxPoint(map.x + map._tileWidth * tx + map._tileWidth, map.y + map._tileHeight * ty);
 			var bl:FlxPoint = new FlxPoint(map.x + map._tileWidth * tx, map.y + map._tileHeight * ty + map._tileHeight);
 			var br:FlxPoint = new FlxPoint(map.x + map._tileWidth * tx + map._tileWidth, map.y + map._tileHeight * ty + map._tileHeight);
 			return [tl, tr, bl, br];
-		}
+		}			
 		
 		private function addParticle(x:int, y:int, graphic:Class, width:int, numFrames:int, lifetime:Number):Particle
 		{

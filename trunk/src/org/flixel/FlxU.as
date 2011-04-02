@@ -19,7 +19,7 @@ package org.flixel
 		/**
 		 * Helps to eliminate false collisions and/or rendering glitches caused by rounding errors
 		 */
-		static internal var roundingError:Number = 0.0000001;
+		static public var roundingError:Number = 0.0000001;
 		/**
 		 * The global quad tree (stored here since it is used primarily by FlxU functions).
 		 * Set this to null to force it to refresh on the next collide.

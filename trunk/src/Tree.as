@@ -29,6 +29,9 @@ package
 		
 		public var growTarget:FlxObject;
 		
+		public var dying:Boolean = false;
+		public var crumbleStack:Array = new Array();
+		
 		public function Tree(x:int, y:int) 
 		{
 			super(x, y);
@@ -44,7 +47,11 @@ package
 		
 		override public function update():void 
 		{
-			if (currentSize < maxSize)
+			if (dying)
+			{
+				crumble();
+			}			
+			else if (currentSize < maxSize)
 			{
 				growTrunk();
 				growBranches();
@@ -60,6 +67,37 @@ package
 			while (diff < -Math.PI) { diff += Math.PI * 2; }
 			while (diff > Math.PI) { diff -= Math.PI * 2; }
 			return diff;
+		}
+		
+		private function crumble():void
+		{
+			var crumbled:int = 0;
+			crumbleStack.push(growPosition);
+			while (crumbled < 6 && crumbleStack.length > 0)
+			{
+				var pos:Point = crumbleStack.shift();
+				//trace(pixels.getPixel32(pos.x, pos.y));
+				if (pixels.getPixel32(pos.x, pos.y) != 0x00000000)
+				{
+					(FlxG.state as GameState).addTreeParticle((x + (pos.x - offset.x)), (y + (pos.y - offset.y)));
+					if (pixels.getPixel32(pos.x, pos.y) > 0x55000000)
+					{
+						pixels.setPixel32(pos.x, pos.y, 0x55000000);
+					}
+					else
+					{
+						pixels.setPixel32(pos.x, pos.y, 0x00000000);
+					}
+					crumbled++;
+					crumbleStack.push(new Point(pos.x + 1, pos.y));					
+					crumbleStack.push(new Point(pos.x, pos.y + 1));					
+					crumbleStack.push(new Point(pos.x - 1, pos.y));					
+					crumbleStack.push(new Point(pos.x, pos.y - 1));					
+					crumbleStack.push(new Point(pos.x + Math.floor(Math.random() * 6 - 3), pos.y + Math.floor(Math.random() * 6 - 3)));
+					crumbleStack.push(new Point(pos.x + Math.floor(Math.random() * 6 - 3), pos.y + Math.floor(Math.random() * 6 - 3)));
+				}
+			}
+			calcFrame();
 		}
 		
 		private function growTrunk():void
@@ -101,7 +139,13 @@ package
 			// Don't grow if we're hitting a tile
 			if (!tilemap.getTile(tileX, tileY))
 			{
+				// Destroy!
+				//
 				growPosition = newPosition
+			}
+			else
+			{
+				dying = true;
 			}
 			
 			(FlxG.state as GameState).addTreeParticle((x + (growPosition.x - offset.x + growX)), (y + (growPosition.y - offset.y + growY)));
