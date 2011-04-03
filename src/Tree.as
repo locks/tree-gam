@@ -22,7 +22,7 @@ package
 		private const maxTrunkSize:Number = 4;
 		private const growRate:Number = 12;
 		private const growAngleChangeRate:Number = Math.PI;
-		private const warningTime:Number = 1; // Seconds from impact at which it warns the player
+		private const warningTime:Number = 0.5; // Seconds from impact at which it warns the player
 		
 		private var growTrunkWidth:Number = 0;
 		private var growAngle:Number = Math.PI; // Up
@@ -252,8 +252,8 @@ package
 			}
 			
 			// Make warning signals if the tree is approaching a tile soon
-			var warningTileX:int = Math.floor((x + (newPosition.x + (Math.sin(growAngle) * warningTime * growRate * (inShadow ? 0.5 : 1.5)) - offset.x)) / tilemap._tileWidth);	
-			var warningTileY:int = Math.floor((y + (newPosition.y + (Math.cos(growAngle) * warningTime * growRate * (inShadow ? 0.5 : 1.5)) - offset.y)) / tilemap._tileHeight);	
+			var warningTileX:int = Math.floor((x + (newPosition.x + (Math.sin(growAngle) * warningTime * growRate * (inShadow ? 0.75 : 1.5)) - offset.x)) / tilemap._tileWidth);	
+			var warningTileY:int = Math.floor((y + (newPosition.y + (Math.cos(growAngle) * warningTime * growRate * (inShadow ? 0.75 : 1.5)) - offset.y)) / tilemap._tileHeight);	
 			if (tilemap.getTile(warningTileX, warningTileY))
 			{
 				warningSprite.visible = true;
