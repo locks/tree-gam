@@ -31,6 +31,7 @@ package
 		
 		public function update(pixels:BitmapData) : void
 		{
+			// Hacky update function ):
 			if (width > 0.3)
 			{
 				width *= 0.985;

@@ -78,7 +78,7 @@ package
 			// Populate with empty particles so we never have to create them on the fly
 			for (var i:int = 0; i < 150; i++) { particles.add( new Particle() ); }
 		
-			editMode = new EditMode();
+			editMode = new EditMode(); // The editor is a mode in the game
 			
 			add(background);
 
@@ -291,6 +291,7 @@ package
 			return p;
 		}		
 		
+		// Goes through the tilemap and replaces special entity values with the actual entity object.
 		private function replaceEntityTiles() : void
 		{
 			for (var i:int = 0; i < map.totalTiles; i++)
