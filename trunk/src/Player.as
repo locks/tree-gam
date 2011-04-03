@@ -24,7 +24,8 @@
 			loadGraphic(playerImage, true, true, 8, 8);
 			addAnimation("idle", [0], 0, true);
 			addAnimation("run", [1, 2, 3, 4], 10, true);
-			addAnimation("jump", [6,5], 2, false);
+			addAnimation("jump", [6, 5], 2, false);
+			
 			acceleration.y = 150;
 			maxVelocity.y = 80;
 			offset.x = 1;

@@ -5,6 +5,9 @@ package
 	 * ...
 	 * @author morgan
 	 */
+	
+	// All particles are created at the beginning of the game and should never be constructed. Call spawn to set
+	// them up as if you were creating them.
 	public class Particle extends FlxSprite
 	{
 		public var age:Number;

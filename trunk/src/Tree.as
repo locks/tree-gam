@@ -98,7 +98,12 @@ package
 		
 		private function renderTree() : void
 		{
-			
+			// Dynamic lighting is done in three steps:
+			// 1. Render the whole tree shape in the darkest shading color
+			// by drawing circles at each recorded tree point.
+			// 2. Render the tree points again using smaller circles of the mid color, offset
+			// slightly by the position of the light.
+			// 3. Same thing with smaller circles, larger offset, and the lightest color.
 			lightSegment.graphics.clear();
 			
 			var i:int = 0;
@@ -106,12 +111,16 @@ package
 			var lightOffsetY:Number = 0;
 			var d:Number = 0;
 			var distScale:Number = 1.0;
+			
+			// Darkest color, every circle full radius
 			lightSegment.graphics.beginFill(trunkColorDark, 1);
 			for each (var ptSize:Array in allPoints)
 			{
 				lightSegment.graphics.drawCircle(ptSize[0].x, ptSize[0].y, ptSize[1]);
 			}
 			lightSegment.graphics.endFill();
+			
+			// Mid color
 			lightSegment.graphics.beginFill(trunkColorMid, 1);
 			for each (ptSize in allPoints)
 			{
@@ -123,7 +132,7 @@ package
 					d = Math.sqrt(lightOffsetX * lightOffsetX + lightOffsetY * lightOffsetY);
 					lightOffsetX *= 1 / d * ptSize[1] / 3;
 					lightOffsetY *= 1 / d * ptSize[1] / 3;
-					distScale = Math.max(Math.min(1, 20 / d),0.25);
+					distScale = Math.max(Math.min(1, 20 / d),0.25); // Make the circles smaller if the light is farther.
 				}
 				if (ptSize[1] * 0.75 * distScale > 0 )
 				{
@@ -132,6 +141,7 @@ package
 			}
 			lightSegment.graphics.endFill();
 			
+			// Highlight color
 			lightSegment.graphics.beginFill(trunkColorLight, 1);
 			for each (ptSize in allPoints)
 			{
@@ -153,7 +163,7 @@ package
 			lightSegment.graphics.endFill();	
 			
 			pixels.draw(lightSegment);
-			calcFrame();
+			calcFrame(); // We drew on pixels so we have to calcFrame to get framePixels
 			
 		}
 		
@@ -166,31 +176,28 @@ package
 			return diff;
 		}
 		
+		// Basically flood-fill, but with some randomness and also over the course of a number of frames
 		private function crumble():void
 		{
+			// Pop a pixel off the stack, check if it's cleared already.
+			// If not, clear it and add its neighbors and some random nearby pixels to the stack.
+			// We're done when nothing on the stack.
 			var crumbled:int = 0;
 			crumbleStack.push(growPosition);
-			while (crumbled < 9 && crumbleStack.length > 0)
+			while (crumbled < 9 && crumbleStack.length > 0) // 9 pixels must be deleted from the tree per frame
 			{
 				var pos:Point = crumbleStack.shift();
-				//trace(pixels.getPixel32(pos.x, pos.y));
 				if (pixels.getPixel32(pos.x, pos.y) != 0x00000000)
 				{
-					/*if (pixels.getPixel32(pos.x, pos.y) > 0x88000000)
-					{
-						pixels.setPixel32(pos.x, pos.y, 0x550e4a1d);
-					}
-					else
-					{
-					*/
-						(FlxG.state as GameState).addTreeParticle((x + (pos.x - offset.x)), (y + (pos.y - offset.y)));
-						pixels.setPixel32(pos.x, pos.y, 0x00000000);
-					//}
+					(FlxG.state as GameState).addTreeParticle((x + (pos.x - offset.x)), (y + (pos.y - offset.y)));
+					pixels.setPixel32(pos.x, pos.y, 0x00000000);
 					crumbled++;
 					crumbleStack.push(new Point(pos.x + 1, pos.y));					
 					crumbleStack.push(new Point(pos.x, pos.y + 1));					
 					crumbleStack.push(new Point(pos.x - 1, pos.y));					
 					crumbleStack.push(new Point(pos.x, pos.y - 1));					
+					// Putting the random ones at the end ensures they pop off the stack earlier, which looks nice. The flood-fill 
+					// directions are lower priority but still there to ensure that every pixel gets deleted.					
 					crumbleStack.push(new Point(pos.x + Math.floor(Math.random() * 6 - 3), pos.y + Math.floor(Math.random() * 6 - 3)));
 					crumbleStack.push(new Point(pos.x + Math.floor(Math.random() * 6 - 3), pos.y + Math.floor(Math.random() * 6 - 3)));
 				}
@@ -198,6 +205,7 @@ package
 			if (crumbleStack.length == 0)
 			{
 				kill();
+				// Fade out because we lost.
 				FlxG.fade.start(0xff000000, 0.75, (FlxG.state as GameState).restart, false);
 			}
 			calcFrame();
@@ -207,7 +215,6 @@ package
 		{
 			// Figure out the new trunk size (it gets smaller as it goes up)
 			growTrunkWidth = maxTrunkSize * (1 - (currentSize / maxSize)) + 0.25; // height = 0 : trunk = max, height = top : trunk = 1;
-			
 			currentSize += growRate * FlxG.elapsed;
 			
 			// Find out if the growth position is in shadow
@@ -237,6 +244,8 @@ package
 			var growY:Number = Math.cos(growAngle) * FlxG.elapsed * growRate * (inShadow ? 0.5 : 1.5);
 			growVect = new Point(growX, growY);
 			var newPosition:Point = growPosition.add(new Point(growX, growY));
+			
+			// Check if there's a tile
 			var tilemap:FlxTilemap = (FlxG.state as GameState).map;
 			var tileX:int = Math.floor((x + (newPosition.x - offset.x)) / tilemap._tileWidth);
 			var tileY:int = Math.floor((y + (newPosition.y - offset.y)) / tilemap._tileHeight);				
@@ -270,7 +279,7 @@ package
 			
 			(FlxG.state as GameState).addTreeParticle((x + (growPosition.x - offset.x + growX)), (y + (growPosition.y - offset.y + growY)));
 			
-			// The tree path is recorded as a list of points.
+			// The tree path is recorded as a list of points to be rendered later with dynamic lighting
 			if (framecount % 8 == 0)
 			{
 				allPoints.push( [growPosition, growTrunkWidth] );
