@@ -65,7 +65,7 @@ package org.flixel
 		 */
 		protected var _flashRect:Rectangle;
 		
-		protected var _pixels:BitmapData;
+		public var _pixels:BitmapData;
 		protected var _bbPixels:BitmapData;
 		protected var _bbKey:String;
 		public var _data:Array;

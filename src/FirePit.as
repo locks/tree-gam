@@ -8,10 +8,11 @@ package
 	 */
 	public class FirePit extends FlxSprite
 	{
-		[Embed (source = "../data/firepit.png")] private var firepitImage:Class;
+		[Embed (source = "../data/firepit.png")] public var firepitImage:Class;
 		public function FirePit(x:int, y:int) 
 		{
 			super(x, y);
+			img = firepitImage;
 			loadGraphic(firepitImage, true, false, 8, 8);
 			addAnimation("default", [0, 1], 4, true);
 			play("default");

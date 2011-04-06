@@ -46,12 +46,12 @@ package
 		public var editMode:EditMode;
 		public var background:FlxSprite;
 		public var filledTiles:Array = new Array();
-		
+		public var totaltiles:int;
 		public var ending:Boolean = false;
 		
-		public var mapEntities:Object = {
-			100 : FirePit
-		}
+		public var mapEntities:Array = [
+			FirePit
+		]
 		
 		public function GameState() 
 		{
@@ -84,6 +84,7 @@ package
 		
 			editMode = new EditMode(); // The editor is a mode in the game
 			
+			renumberEntities();
 			add(background);
 			add(tree);
 			
@@ -387,6 +388,15 @@ package
 			return p;
 		}		
 		
+		public function renumberEntities() : void 
+		{
+			
+			var tilemap:BitmapData = FlxG.addBitmap(tilesImage);
+			totaltiles = tilemap.width / 8;
+			FlxG.log(totaltiles);
+		
+		}
+		
 		// Goes through the tilemap and replaces special entity values with the actual entity object.
 		public function replaceEntityTiles() : void
 		{
@@ -394,21 +404,20 @@ package
 			for (var i:int = 0; i < map.totalTiles; i++)
 			{
 				if (map.getTileByIndex(i) != 0) { filledTiles.push(i) };
-				for ( var keyS:String in mapEntities )
+
+				if (map.getTileByIndex(i) >= totaltiles)
 				{
-					var key:int = parseInt(keyS);
-					if (key == map.getTileByIndex(i) && key != 0)
-					{
-						map.setTileByIndex(i, 0);
-						var x:int = i % map.widthInTiles;
-						var y:int = i / map.widthInTiles;
-						var c:Class = getDefinitionByName(getQualifiedClassName(mapEntities[keyS])) as Class;
-						var o:FlxObject = (new c(x * 8, y * 8) as FlxObject);
-						o.fixed = true;
-						entities.add(o);
-					}
 					
+					var x:int = i % map.widthInTiles;
+					var y:int = i / map.widthInTiles;
+					var c:Class = getDefinitionByName(getQualifiedClassName(mapEntities[map.getTileByIndex(i) - totaltiles])) as Class;
+					var o:FlxObject = (new c(x * 8, y * 8) as FlxObject);
+					o.fixed = true;
+					entities.add(o);
+					map.setTileByIndex(i, 0);
 				}
+					
+				
 			}
 		}
 		
@@ -422,7 +431,7 @@ package
 			lvl += "1\n";
 			for (var j:int = 0; j < 81; j++)
 			{
-				lvl += "1,";
+				lvl += "16,";
 				for (i = 0; i < 59; i++)
 				{
 					lvl += "0,"

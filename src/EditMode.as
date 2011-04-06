@@ -1,9 +1,15 @@
 package  
 {
+	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.geom.Matrix;
 	import org.flixel.FlxG;
 	import org.flixel.FlxObject;
 	import org.flixel.FlxSprite;
+	import org.flixel.FlxTileblock;
+	import org.flixel.FlxTilemap;
+	import flash.utils.getDefinitionByName;
+	import flash.utils.getQualifiedClassName;
 	/**
 	 * ...
 	 * @author morgan
@@ -12,35 +18,80 @@ package
 	{
 		[Embed (source = "../data/editor_cursor.png")] private var cursorImage:Class;		
 		[Embed (source = "../data/editor_tileSelector.png")] private var selectorImage:Class;		
+		[Embed (source = "../data/editor_tileSelector_red.png")] private var selectorRedImage:Class;		
 		[Embed (source = "../data/tiles.png")] private var tilesImage:Class;
+		[Embed (source = "../data/tilebg.png")] private var tilebgImage:Class;
 		public var enabled:Boolean;
 		public var selector:FlxSprite;
+		public var selectorRed:FlxSprite;
 		public var paintTile:uint;
 		public var tileSprite:FlxSprite;
+		public var tiles:FlxTilemap
+		public var currTileIndex:int = 1;
+		public var tilebg:FlxSprite;
 		
 		public function EditMode() 
 		{
 			selector = new FlxSprite(0, 0, selectorImage);
 			selector.visible = false;			
+			selectorRed = new FlxSprite(0, 0, selectorRedImage);
+			selectorRed.visible = false;			
 			tileSprite = new FlxSprite(0, 0);
+			tilebg = new FlxSprite(0, 0);
+			tilebg.loadGraphic(tilebgImage, false, false, 96, 24);
 			tileSprite.loadGraphic(tilesImage, true, false, 8, 8);
+			
 			tileSprite.alpha = 1;
 			tileSprite.visible = false;
 			enabled = false;
 			paintTile = 1;
+			var s:String = "";
+			for (var i:int = 0; i < 48; i++) {
+				s += "" + i + ",";
+				if (i % 12 == 11) s += "\n";
+			}
+			tilebg.visible = false;
+			tiles = new FlxTilemap();
+			tiles.loadMap(s, tilesImage, 8, 8);
+			tiles.scrollFactor.x = 0;
+			tiles.scrollFactor.y = 0;
+			tilebg.scrollFactor.x = 0;
+			tilebg.scrollFactor.y = 0;
+			tiles.visible = false;
+			selectorRed.scrollFactor.x = 0;
+			selectorRed.scrollFactor.y = 0;
 		}
 		
 		public function initialize() : void
 		{
 			(FlxG.state as GameState).add(tileSprite);			
 			(FlxG.state as GameState).add(selector);
+			
+			(FlxG.state as GameState).add(tilebg);
+			(FlxG.state as GameState).add(tiles);
+			(FlxG.state as GameState).add(selectorRed);
+			var b:BitmapData = new BitmapData(8 * ((FlxG.state as GameState).totaltiles + (FlxG.state as GameState).mapEntities.length), 8, true);
+			var b2:BitmapData = FlxG.addBitmap(tilesImage);
+			b.draw(b2);
+			for (var i:int = 0; i < (FlxG.state as GameState).mapEntities.length; i++) {
+				var c:Class = getDefinitionByName(getQualifiedClassName((FlxG.state as GameState).mapEntities[i])) as Class;
+				var o:FlxSprite = (new c(x * 8, y * 8) as FlxSprite);
+				b.draw(FlxG.addBitmap(o.img), new Matrix(1,0,0,1,8*(FlxG.state as GameState).totaltiles + 8 * i,0));
+			}
+			tiles._pixels = b;
+			(FlxG.state as GameState).map._pixels = b;
+			
 		}
+		
 		
 		public function toggle() : void
 		{
 			enabled = !enabled;
 			selector.visible = enabled;
+			selectorRed.visible = enabled;
 			tileSprite.visible = enabled;
+			tiles.visible = enabled;
+			tilebg.visible = enabled;
 			if (enabled)
 			{
 				FlxG.mouse.show(cursorImage);
@@ -53,48 +104,64 @@ package
 	
 		public override function update() : void
 		{
-			selector.x = Math.floor(FlxG.mouse.x / 8) * 8
-			selector.y = Math.floor(FlxG.mouse.y / 8) * 8
-			tileSprite.x = selector.x;
-			tileSprite.y = selector.y;
-			tileSprite.frame = paintTile;
-			if (FlxG.mouse.pressed())
-			{
-				(FlxG.state as GameState).map.setTile(selector.x / 8, selector.y / 8, paintTile);
-				(FlxG.state as GameState).replaceEntityTiles();
-			}
-			if (FlxG.keys.justPressed("COMMA"))
-			{
-				paintTile = Math.max(paintTile - 1, 0);
-			}
-			if (FlxG.keys.justPressed("PERIOD"))
-			{
-				paintTile++;
-			}
-			if (FlxG.keys.justPressed("S"))
-			{
-				var data:Array = (FlxG.state as GameState).map._data;
-				var allData:String = "";
-				var cols:int = (FlxG.state as GameState).map.widthInTiles;
-				for (var i:int = 0; i < data.length / cols; i++)
+			if (enabled) {
+				selector.x = Math.floor(FlxG.mouse.x / 8) * 8
+				selector.y = Math.floor(FlxG.mouse.y / 8) * 8
+				tileSprite.x = selector.x;
+				tileSprite.y = selector.y;
+				tileSprite.frame = paintTile;
+				if (FlxG.mouse.pressed())
 				{
-					for (var j:int = 0; j < cols; j++)
-					{
-						if (j < cols-1)
-						{
-							allData += data[i * cols + j] + ",";
-						}
-						else
-						{
-							allData += data[i * cols + j];
-						}
-					}
-					if ( i < data.length / cols - 1 )
-					{
-						allData += "\n";
+					var sx:Number = FlxG.mouse.cursor.getScreenXY().x;
+					var sy:Number = FlxG.mouse.cursor.getScreenXY().y;
+					if (sy > 24) {
+						(FlxG.state as GameState).map.setTile(selector.x / 8, selector.y / 8, paintTile);
+					} else {
+						selectorRed.x = int(sx / 8) * 8;
+						selectorRed.y = int(sy / 8) * 8;
+						FlxG.log(selectorRed.y);
+						paintTile = currTileIndex * (selectorRed.x / 8 + 12 * ((selectorRed.y / 8)));
 					}
 				}
-				trace(allData);
+				if (FlxG.keys.justPressed("PERIOD"))
+				{
+					for (var i:int = 0; i < 48; i++) {
+						tiles.setTileByIndex(i, tiles.getTileByIndex(i) + 48, true);
+						currTileIndex++;
+					}
+				}
+				if (FlxG.keys.justPressed("COMMA"))
+				{
+					for (i = 0; i < 48; i++) {
+						tiles.setTileByIndex(i, tiles.getTileByIndex(i) - 48, true);
+						currTileIndex--;
+					}
+				}
+				if (FlxG.keys.justPressed("S"))
+				{
+					var data:Array = (FlxG.state as GameState).map._data;
+					var allData:String = "";
+					var cols:int = (FlxG.state as GameState).map.widthInTiles;
+					for (var i:int = 0; i < data.length / cols; i++)
+					{
+						for (var j:int = 0; j < cols; j++)
+						{
+							if (j < cols-1)
+							{
+								allData += data[i * cols + j] + ",";
+							}
+							else
+							{
+								allData += data[i * cols + j];
+							}
+						}
+						if ( i < data.length / cols - 1 )
+						{
+							allData += "\n";
+						}
+					}
+					trace(allData);
+				}
 			}
 		}
 		
