@@ -77,7 +77,7 @@ package
 			}			
 			else
 			{
-				if (framecount % 2 == 0)
+				if (framecount % 2 == 1)
 				{
 					renderTree();
 				}	

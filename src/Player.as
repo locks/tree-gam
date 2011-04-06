@@ -23,7 +23,7 @@
 			super(x, y);
 			loadGraphic(playerImage, true, true, 8, 8);
 			addAnimation("idle", [0], 0, true);
-			addAnimation("run", [1, 2, 3, 4], 10, true);
+			addAnimation("run", [1, 2, 3, 4], 8, true);
 			addAnimation("jump", [6, 5], 2, false);
 			
 			acceleration.y = 150;

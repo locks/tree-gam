@@ -61,6 +61,7 @@ package
 			if (FlxG.mouse.pressed())
 			{
 				(FlxG.state as GameState).map.setTile(selector.x / 8, selector.y / 8, paintTile);
+				(FlxG.state as GameState).replaceEntityTiles();
 			}
 			if (FlxG.keys.justPressed("COMMA"))
 			{
