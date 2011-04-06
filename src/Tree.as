@@ -192,7 +192,7 @@ package
 			// We're done when nothing on the stack.
 			var crumbled:int = 0;
 			crumbleStack.push(growPosition);
-			while (crumbled < 9 && crumbleStack.length > 0) // 9 pixels must be deleted from the tree per frame
+			while (crumbled < 6 && crumbleStack.length > 0) // 9 pixels must be deleted from the tree per frame
 			{
 				var pos:Point = crumbleStack.shift();
 				if (pixels.getPixel32(pos.x, pos.y) != 0x00000000)
@@ -210,11 +210,12 @@ package
 					crumbleStack.push(new Point(pos.x + Math.floor(Math.random() * 6 - 3), pos.y + Math.floor(Math.random() * 6 - 3)));
 					(FlxG.state as GameState).scrollObject.x = x + pos.x - offset.x;
 					(FlxG.state as GameState).scrollObject.y = y + pos.y - offset.y;
+					FlxG.followLerp = 4;
 				}
 			}
 			if (crumbleStack.length == 0)
 			{
-				kill();
+				// kill();
 				// Fade out because we lost.
 				FlxG.fade.start(0xff000000, 0.75, (FlxG.state as GameState).restart, false);
 			}
