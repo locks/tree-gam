@@ -28,7 +28,7 @@ package
 		public var selectorRed:FlxSprite;
 		public var paintTile:uint;
 		public var tileSprite:FlxSprite;
-		public var tiles:FlxTilemap
+		public var tiles:FlxTilemap;
 		public var currTileIndex:int = 1;
 		public var tilebg:FlxSprite;
 		

@@ -15,6 +15,7 @@
 		public const doubleJumpForce:Number = 70;
 		public const walkSpeed:Number = 50;
 		
+		public var timeInAir:Number = 0;
 		public var holdObject:FlxObject;
 		public var doubleJumped:Boolean;
 		
@@ -23,7 +24,7 @@
 			super(x, y);
 			loadGraphic(playerImage, true, true, 8, 8);
 			addAnimation("idle", [0], 0, true);
-			addAnimation("run", [1, 2, 3, 4], 8, true);
+			addAnimation("run", [1, 2, 3, 4], 10, true);
 			addAnimation("jump", [6, 5], 2, false);
 			
 			acceleration.y = 150;
@@ -46,8 +47,9 @@
 			{
 				updatePlayerInput();
 			}
-			updatePlayerAnim();			
+			updatePlayerAnim();
 			super.update();
+			
 		}
 		
 		private function updatePlayerAnim():void
@@ -63,8 +65,12 @@
 					play("idle");
 				}				
 			}
-			else
+			else if (timeInAir > 0.1)
 			{
+				if (_curAnim && _curAnim.name != "jump")
+				{
+					FlxG.log("jump animation");	
+				}				
 				play("jump");
 			}
 		}
@@ -72,6 +78,15 @@
 		private function updatePlayerInput():void
 		{
 			velocity.x = 0;
+			
+			if (!onFloor)
+			{
+				timeInAir += FlxG.elapsed;
+			}
+			else
+			{
+				timeInAir = 0;
+			}
 			
 			// First jump (on the floor)
 			if (FlxG.keys.justPressed("UP") && onFloor) {

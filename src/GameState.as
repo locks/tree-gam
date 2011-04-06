@@ -50,6 +50,9 @@ package
 		public var ending:Boolean = false;
 		
 		public var currentMapString:String;
+		public var scrollObject:FlxSprite;
+		
+		public var currentTree:Tree;
 		
 		public var mapEntities:Array = [
 			FirePit
@@ -70,6 +73,7 @@ package
 			background = new FlxSprite(0, 8, bgImage);
 			background.scrollFactor.x = background.scrollFactor.y = 0.5;
 			var tree:Tree = new Tree(30, map.height - 8);			
+			currentTree = tree;
 			var lightEmission:FlxSprite = new FlxSprite(0, 0, lightImage);
 			
 			lightEmission.blend = "screen";
@@ -79,6 +83,8 @@ package
 			player.holdObject = lantern;
 			tree.growTarget = lantern;
 
+			scrollObject = new FlxSprite(0, 0);
+			scrollObject.visible = false;
 
 			particles = new FlxGroup();
 
@@ -96,8 +102,9 @@ package
 			add(player);		
 			add(lantern);		
 			add(particles);		
-			add(tree.warningSprite);						
+			add(tree.warningSprite);		
 			add(editMode);	
+			add(scrollObject);
 			
 		}
 		
@@ -105,7 +112,9 @@ package
 		{
 			editMode.initialize();
 			replaceEntityTiles();
-			FlxG.follow(player, 3);
+			scrollObject.x = player.x;
+			scrollObject.y = player.y;			
+			FlxG.follow(scrollObject, 3);
 			FlxG.followBounds(0, 0, map.width, map.height);
 			FlxG.flash.start(0xff000000, 1);
 			FlxG.stage.quality = StageQuality.MEDIUM;
@@ -130,13 +139,46 @@ package
 				player.holdObject.velocity.y = 0;
 				player.holdObject.velocity.x = 0;
 			}
-			
-			super.update();
+
 			shadowMap.fillRect(new Rectangle(0, 0, FlxG.width, FlxG.height), 0xffffffff);
-			if (!editMode.enabled)
+			if (editMode.enabled)
+			{
+				scrollObject.x = player.x;
+				scrollObject.y = player.y;
+			}	
+			else
 			{
 				drawShadows();
+				var psx:int = 0;
+				var psy:int = 0;
+
+				if ( Math.abs(lantern.x - currentTree.gameGrowPosition.x) > 70
+				|| Math.abs(lantern.y - currentTree.gameGrowPosition.y) > 100
+				|| currentTree.doneGrowing)
+				{
+					psx = lantern.x;
+					psy = lantern.y;
+				}
+				else
+				{
+					psx = (lantern.x + currentTree.gameGrowPosition.x) / 2;
+					psy = (lantern.y + currentTree.gameGrowPosition.y) / 2;				
+				}
+
+				if ( Math.abs(psx - player.x) > 50 || Math.abs(psy - player.y) > 50 )
+				{
+					scrollObject.x = player.x;
+					scrollObject.y = player.y;
+				}		
+				else
+				{
+					scrollObject.x = psx;
+					scrollObject.y = psy;
+				}
 			}			
+			
+			super.update();
+
 			
 			FlxU.collide(player, map);
 			FlxU.collide(lantern, map);
@@ -249,10 +291,10 @@ package
 				var corners:Array = getCorners(r, c);
 				if (map.getTile(r, c) != 0) {
 					var rect:Array = new Array();
-					var tl:FlxPoint = corners[0]
-					var tr:FlxPoint = corners[1]
-					var bl:FlxPoint = corners[2]
-					var br:FlxPoint = corners[3]
+					var tl:FlxPoint = corners[0];
+					var tr:FlxPoint = corners[1];
+					var bl:FlxPoint = corners[2];
+					var br:FlxPoint = corners[3];
 					var extra:FlxPoint = null;
 					if (px <= tl.x && py <= tl.y) {
 						rect.push(tr);

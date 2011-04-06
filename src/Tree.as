@@ -32,6 +32,8 @@ package
 		private var growVect:Point = new Point(0, 0);
 		private var currentSize:Number = 0;
 		
+		public var gameGrowPosition:Point = new Point(0,0);
+		
 		private var branches:Array;
 		private var branchTimer:Number = 0;
 		
@@ -45,6 +47,8 @@ package
 		
 		public var allPoints:Array = new Array();
 		public var framecount:int = 0;
+		
+		public var doneGrowing:Boolean = false;
 		
 		public function Tree(x:int, y:int) 
 		{
@@ -92,6 +96,8 @@ package
 					growBranches();
 				}
 			}
+			
+			if (currentSize >= maxSize) { doneGrowing = true; }
 
 			framecount++;
 			
@@ -114,7 +120,7 @@ package
 			var d:Number = 0;
 			var distScale:Number = 1.0;
 			
-			// Darkest color, every circle full radius
+			// Darkest color, every circle full radius		
 			lightSegment.graphics.beginFill(trunkColorDark, 1);
 			for each (var ptSize:Array in allPoints)
 			{
@@ -127,14 +133,14 @@ package
 			for each (ptSize in allPoints)
 			{
 				i++;
-				if (i % 10 == 0)
+				if (i % 10 == 1)
 				{
 					lightOffsetX = growTarget.x - (x + (ptSize[0].x - offset.x))
 					lightOffsetY = growTarget.y - (y + (ptSize[0].y - offset.y))
 					d = Math.sqrt(lightOffsetX * lightOffsetX + lightOffsetY * lightOffsetY);
 					lightOffsetX *= 1 / d * ptSize[1] / 3;
 					lightOffsetY *= 1 / d * ptSize[1] / 3;
-					distScale = Math.max(Math.min(1, 20 / d),0.25); // Make the circles smaller if the light is farther.
+					distScale = Math.max(Math.min(1, 20 / d),0.5); // Make the circles smaller if the light is farther.
 				}
 				if (ptSize[1] * 0.75 * distScale > 0 )
 				{
@@ -148,14 +154,14 @@ package
 			for each (ptSize in allPoints)
 			{
 				i++;
-				if (i % 10 == 0)
+				if (i % 10 == 1)
 				{
 					lightOffsetX = growTarget.x - (x + (ptSize[0].x - offset.x))
 					lightOffsetY = growTarget.y - (y + (ptSize[0].y - offset.y))
 					d = Math.sqrt(lightOffsetX * lightOffsetX + lightOffsetY * lightOffsetY);
 					lightOffsetX *= 1 / d * ptSize[1] / 1.5;
 					lightOffsetY *= 1 / d * ptSize[1] / 1.5;
-					distScale = Math.max(Math.min(2, 50 / d),0.5) - 1;
+					distScale = Math.max(Math.min(2, 50 / d),0.25) - 1;
 				}
 				if (ptSize[1] * 0.25 * distScale > 0 && d < 50)
 				{
@@ -202,6 +208,8 @@ package
 					// directions are lower priority but still there to ensure that every pixel gets deleted.					
 					crumbleStack.push(new Point(pos.x + Math.floor(Math.random() * 6 - 3), pos.y + Math.floor(Math.random() * 6 - 3)));
 					crumbleStack.push(new Point(pos.x + Math.floor(Math.random() * 6 - 3), pos.y + Math.floor(Math.random() * 6 - 3)));
+					(FlxG.state as GameState).scrollObject.x = x + pos.x - offset.x;
+					(FlxG.state as GameState).scrollObject.y = y + pos.y - offset.y;
 				}
 			}
 			if (crumbleStack.length == 0)
@@ -278,6 +286,8 @@ package
 			{
 				warningSprite.visible = false;
 			}
+			
+			gameGrowPosition = new Point(x + growPosition.x - offset.x, y + growPosition.y - offset.y);
 			
 			(FlxG.state as GameState).addTreeParticle((x + (growPosition.x - offset.x + growX)), (y + (growPosition.y - offset.y + growY)));
 			
