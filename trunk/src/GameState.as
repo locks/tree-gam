@@ -44,6 +44,8 @@ package
 		public var particles:FlxGroup;
 		public var entities:FlxGroup;
 		public var editMode:EditMode;
+		public var background:FlxSprite;
+		public var filledTiles:Array = new Array();
 		
 		public var ending:Boolean = false;
 		
@@ -55,12 +57,16 @@ package
 		{
 			bgColor = 0xffd1dfe7;
 			
+			map = new FlxTilemap();		
+			map.loadMap(generateEmptyMap(), tilesImage, 8, 8);			
+			
 			entities = new FlxGroup();
 			shadowMap = new BitmapData(FlxG.width, FlxG.height, true, 0x55000000);
-			player = new Player(50, 50);
+			player = new Player(50, map.height - 16);
 			lantern = new Lantern(50, 50);
-			var background:FlxSprite = new FlxSprite(0, 0, bgImage);
-			var tree:Tree = new Tree(30, 120);			
+			background = new FlxSprite(0, 8, bgImage);
+			background.scrollFactor.x = background.scrollFactor.y = 0.5;
+			var tree:Tree = new Tree(30, map.height - 8);			
 			var lightEmission:FlxSprite = new FlxSprite(0, 0, lightImage);
 			
 			lightEmission.blend = "screen";
@@ -70,8 +76,6 @@ package
 			player.holdObject = lantern;
 			tree.growTarget = lantern;
 
-			map = new FlxTilemap();		
-			map.loadMap(new openmapData, tilesImage, 8, 8);
 
 			particles = new FlxGroup();
 
@@ -81,17 +85,17 @@ package
 			editMode = new EditMode(); // The editor is a mode in the game
 			
 			add(background);
-
 			add(tree);
-			add(lightEmission);
-			add(player);			
+			
+				
 			add(entities);	
 			add(map);
+			add(lightEmission);
+			add(player);		
 			add(lantern);		
 			add(particles);		
 			add(tree.warningSprite);						
 			add(editMode);	
-			
 			
 		}
 		
@@ -99,7 +103,7 @@ package
 		{
 			editMode.initialize();
 			replaceEntityTiles();
-			FlxG.follow(player, 10);
+			FlxG.follow(player, 3);
 			FlxG.followBounds(0, 0, map.width, map.height);
 			FlxG.flash.start(0xff000000, 1);
 			FlxG.stage.quality = StageQuality.MEDIUM;
@@ -111,6 +115,8 @@ package
 			{
 				editMode.toggle();
 			}
+			
+			//background.blend = (Math.random() < 0.5) ? "difference" : "normal";
 			
 			// Position the lantern			
 			if (player.holdObject != null)
@@ -150,13 +156,14 @@ package
 			return map._data;
 		}
 		
-		public function drawShadows():void 
+		public function drawShadows2():void 
 		{
 			
 			var px:int = lantern.x + 1;
 			var py:int = lantern.y + 1;
 			
 			var s:Shape = new Shape();
+			
 			for (var r:int = 0; r < map.widthInTiles; r++) {
 				for (var c:int = 0; c < map.heightInTiles; c++) {
 					var corners:Array = getCorners(r, c);
@@ -228,6 +235,95 @@ package
 			shadowMap.draw(s, mtx);
 		}	
 		
+		public function drawShadows():void 
+		{
+			
+			var px:int = lantern.x + 1;
+			var py:int = lantern.y + 1;
+			
+			var s:Shape = new Shape();
+			
+			for (var i:int = 0; i < filledTiles.length; i++ ) {
+				var c:int = filledTiles[i] / map.widthInTiles;
+				var r:int = filledTiles[i] % map.widthInTiles;
+				var corners:Array = getCorners(r, c);
+				if (map.getTile(r, c) != 0) {
+					var rect:Array = new Array();
+					var tl:FlxPoint = corners[0]
+					var tr:FlxPoint = corners[1]
+					var bl:FlxPoint = corners[2]
+					var br:FlxPoint = corners[3]
+					var extra:FlxPoint = null;
+					if (px <= tl.x && py <= tl.y) {
+						rect.push(tr);
+						rect.push(bl);
+						extra = new FlxPoint(br.x, br.y);
+					} else if (py <= tr.y && px > tl.x && px < tr.x) {
+						rect.push(bl);
+						rect.push(br);
+					} else if (px >= tr.x && py <= tr.y) {
+						rect.push(tl);
+						rect.push(br);
+						extra = new FlxPoint(bl.x, bl.y);
+					} else if (px <= tl.x && py < bl.y && py > tl.y) {
+						rect.push(tr);
+						rect.push(br);
+					} else if (px >= tr.x && py < br.y && py > tr.y) {
+						rect.push(tl);
+						rect.push(bl);
+					} else if (px <= bl.x && py >= bl.y) {
+						rect.push(tl);
+						rect.push(br);
+						extra = new FlxPoint(tr.x, tr.y);
+					} else if (px > bl.x && px < br.x && py >= bl.y) {
+						rect.push(tl);
+						rect.push(tr);
+					} else if (px >= br.x && py  >= br.y) {
+						rect.push(bl);
+						rect.push(tr);
+						extra = new FlxPoint(tl.x, tl.y);
+					}else { continue; }
+					
+
+				
+					var corner1:FlxPoint = rect[0] as FlxPoint;
+					var corner2:FlxPoint = rect[1] as FlxPoint;
+					var c1dx:Number = (corner1.x - px);
+					var c1dy:Number = (corner1.y - py);
+					/*var d:Number = Math.sqrt(c1dx * c1dx + c1dy * c1dy);
+					c1dx /= d;
+					c1dy /= d;
+					*/
+					var c2dx:Number = (corner2.x - px);
+					var c2dy:Number = (corner2.y - py);
+					/*d = Math.sqrt(c2dx * c2dx + c2dy * c2dy);
+					c2dx /= d;
+					c2dy /= d;					
+					*/
+					var corner3:FlxPoint = new FlxPoint(c1dx * 30 + corner1.x, c1dy * 30 + corner1.y);
+					var corner4:FlxPoint = new FlxPoint(c2dx * 30 + corner2.x, c2dy * 30 + corner2.y);
+					
+					s.graphics.beginFill(0xff4d3781, 1);
+					s.graphics.lineStyle(1, 0xff4d3781, 0);
+					
+					// 1 2 4 3
+					s.graphics.moveTo(corner1.x, corner1.y);
+					if (extra != null) {
+						s.graphics.lineTo(extra.x, extra.y);
+					}
+					s.graphics.lineTo(corner2.x, corner2.y);
+					s.graphics.lineTo(corner4.x, corner4.y);
+					s.graphics.lineTo(corner3.x, corner3.y);
+					
+
+					s.graphics.endFill();
+				}
+			}
+			var screenPt:FlxPoint = getScreenXY(0, 0);
+			var mtx:Matrix = new Matrix(1, 0, 0, 1, screenPt.x, screenPt.y);
+			shadowMap.draw(s, mtx);
+		}			
+		
 		public function addJumpParticle(x:int, y:int, double:Boolean) : void
 		{
 			if (double)
@@ -292,10 +388,12 @@ package
 		}		
 		
 		// Goes through the tilemap and replaces special entity values with the actual entity object.
-		private function replaceEntityTiles() : void
+		public function replaceEntityTiles() : void
 		{
+			filledTiles = new Array();
 			for (var i:int = 0; i < map.totalTiles; i++)
 			{
+				if (map.getTileByIndex(i) != 0) { filledTiles.push(i) };
 				for ( var keyS:String in mapEntities )
 				{
 					var key:int = parseInt(keyS);
@@ -313,6 +411,31 @@ package
 				}
 			}
 		}
-	}
+		
+		private function generateEmptyMap() : String
+		{
+			var lvl:String = "";
+			for (var i:int = 0; i < 60; i++)
+			{
+				lvl += "1,";
+			}			
+			lvl += "1\n";
+			for (var j:int = 0; j < 81; j++)
+			{
+				lvl += "1,";
+				for (i = 0; i < 59; i++)
+				{
+					lvl += "0,"
+				}
+				lvl += "1\n";
+			}
+			for (i = 0; i < 60; i++)
+			{
+				lvl += "1,";
+			}			
+			lvl += "1";
+			return lvl;
+		}
 
+	}
 }

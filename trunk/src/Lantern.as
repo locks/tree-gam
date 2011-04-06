@@ -28,6 +28,7 @@ package
 		
 		override public function update():void 
 		{
+			super.update();
 			particleTimer += FlxG.elapsed;
 			if (particleTimer > 0.1)
 			{
@@ -40,7 +41,6 @@ package
 				lightEmission.x = x - lightEmission.width / 2 + 2;
 				lightEmission.y = y - lightEmission.height / 2 + 2;
 			}
-			super.update();
 		}
 		
 		override public function hitBottom(Contact:FlxObject, Velocity:Number):void 
