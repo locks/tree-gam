@@ -148,32 +148,35 @@ package
 			}	
 			else
 			{
-				drawShadows();
-				var psx:int = 0;
-				var psy:int = 0;
+				if (!ending)
+				{
+					drawShadows();
+					var psx:int = 0;
+					var psy:int = 0;
 
-				if ( Math.abs(lantern.x - currentTree.gameGrowPosition.x) > 70
-				|| Math.abs(lantern.y - currentTree.gameGrowPosition.y) > 100
-				|| currentTree.doneGrowing)
-				{
-					psx = lantern.x;
-					psy = lantern.y;
-				}
-				else
-				{
-					psx = (lantern.x + currentTree.gameGrowPosition.x) / 2;
-					psy = (lantern.y + currentTree.gameGrowPosition.y) / 2;				
-				}
+					if ( Math.abs(lantern.x - currentTree.gameGrowPosition.x) > 70
+					|| Math.abs(lantern.y - currentTree.gameGrowPosition.y) > 100
+					|| currentTree.doneGrowing)
+					{
+						psx = lantern.x;
+						psy = lantern.y;
+					}
+					else
+					{
+						psx = (lantern.x + currentTree.gameGrowPosition.x) / 2;
+						psy = (lantern.y + currentTree.gameGrowPosition.y) / 2;				
+					}
 
-				if ( Math.abs(psx - player.x) > 50 || Math.abs(psy - player.y) > 50 )
-				{
-					scrollObject.x = player.x;
-					scrollObject.y = player.y;
-				}		
-				else
-				{
-					scrollObject.x = psx;
-					scrollObject.y = psy;
+					if ( Math.abs(psx - player.x) > 50 || Math.abs(psy - player.y) > 50 )
+					{
+						scrollObject.x = player.x;
+						scrollObject.y = player.y;
+					}		
+					else
+					{
+						scrollObject.x = psx;
+						scrollObject.y = psy;
+					}
 				}
 			}			
 			
