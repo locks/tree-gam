@@ -49,6 +49,8 @@ package
 		public var totaltiles:int;
 		public var ending:Boolean = false;
 		
+		public var currentMapString:String;
+		
 		public var mapEntities:Array = [
 			FirePit
 		]
@@ -58,7 +60,8 @@ package
 			bgColor = 0xffd1dfe7;
 			
 			map = new FlxTilemap();		
-			map.loadMap(generateEmptyMap(), tilesImage, 8, 8);			
+			currentMapString = generateEmptyMap();
+			map.loadMap(currentMapString, tilesImage, 8, 8);
 			
 			entities = new FlxGroup();
 			shadowMap = new BitmapData(FlxG.width, FlxG.height, true, 0x55000000);
@@ -87,8 +90,6 @@ package
 			renumberEntities();
 			add(background);
 			add(tree);
-			
-				
 			add(entities);	
 			add(map);
 			add(lightEmission);
@@ -116,8 +117,6 @@ package
 			{
 				editMode.toggle();
 			}
-			
-			//background.blend = (Math.random() < 0.5) ? "difference" : "normal";
 			
 			// Position the lantern			
 			if (player.holdObject != null)
@@ -431,7 +430,7 @@ package
 			lvl += "1\n";
 			for (var j:int = 0; j < 81; j++)
 			{
-				lvl += "16,";
+				lvl += "1,";
 				for (i = 0; i < 59; i++)
 				{
 					lvl += "0,"

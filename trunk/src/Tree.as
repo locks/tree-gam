@@ -69,6 +69,8 @@ package
 		
 		override public function update():void 
 		{
+			
+			if ((FlxG.state as GameState).editMode.enabled) { super.update(); return; }
 			if (dying)
 			{
 				warningSprite.kill();

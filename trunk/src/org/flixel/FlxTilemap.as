@@ -309,6 +309,8 @@ package org.flixel
 		 */
 		override public function render():void
 		{
+			FlxG.log(this.height);
+			FlxG.log(_pixels.width / 8);
 			renderTilemap();
 		}
 		
@@ -769,7 +771,7 @@ package org.flixel
 			}
 			var rx:uint = (_data[Index]-startingIndex)*_tileWidth;
 			var ry:uint = 0;
-			if(rx >= _pixels.width)
+			if(rx >= _pixels.width && false)
 			{
 				ry = uint(rx/_pixels.width)*_tileHeight;
 				rx %= _pixels.width;
