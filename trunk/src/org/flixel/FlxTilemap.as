@@ -309,8 +309,6 @@ package org.flixel
 		 */
 		override public function render():void
 		{
-			FlxG.log(this.height);
-			FlxG.log(_pixels.width / 8);
 			renderTilemap();
 		}
 		

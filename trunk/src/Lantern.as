@@ -30,7 +30,7 @@ package
 		{
 			super.update();
 			particleTimer += FlxG.elapsed;
-			if (particleTimer > 0.1)
+			if (particleTimer > 0.05)
 			{
 				(FlxG.state as GameState).addLightParticle(x + 1, y + 2);
 				particleTimer = 0;
