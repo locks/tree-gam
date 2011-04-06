@@ -35,7 +35,7 @@ package org.flixel
 		* you might need to offset the new bounding box from the top-left corner of the sprite.
 		*/
 		public var offset:FlxPoint;
-		
+		public var img:Class;
 		/**
 		 * Change the size of your sprite's graphic.
 		 * NOTE: Scale doesn't currently affect collisions automatically,
