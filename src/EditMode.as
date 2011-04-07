@@ -12,6 +12,7 @@ package
 	import org.flixel.FlxTilemap;
 	import flash.utils.getDefinitionByName;
 	import flash.utils.getQualifiedClassName;
+	import flash.net.FileReference;
 	/**
 	 * ...
 	 * @author morgan
@@ -148,7 +149,9 @@ package
 				}
 				if (FlxG.keys.justPressed("S"))
 				{
-					trace(getMapString());
+					//trace(getMapString());
+					var f:FileReference = new FileReference();
+					f.save(getMapString());
 				}
 			}
 		}

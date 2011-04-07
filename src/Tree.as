@@ -14,9 +14,21 @@ package
 	{
 		[Embed (source = "../data/warning.png")] private var warningImage:Class;
 		
+		/*
 		private const trunkColorDark:uint = 0xff0e4a2a;
 		private const trunkColorMid:uint = 0xff217a15;
 		private const trunkColorLight:uint = 0xff75bf34;
+		*/
+		/*
+		private const trunkColorDark:uint = 0xff047500;
+		private const trunkColorMid:uint = 0xff51951d;
+		private const trunkColorLight:uint = 0xffadcb44;
+		*/
+
+		private const trunkColorDark:uint = 0xff111819;
+		private const trunkColorMid:uint = 0xff22483c;
+		private const trunkColorLight:uint = 0xff4b9a4e;		
+		
 		
 		private const maxSize:Number = 200;
 		private const maxTrunkSize:Number = 4;
@@ -118,7 +130,7 @@ package
 			var lightOffsetX:Number = 0 ;
 			var lightOffsetY:Number = 0;
 			var d:Number = 0;
-			var distScale:Number = 1.0;
+			var distScale:Number = 0;		
 			
 			// Darkest color, every circle full radius		
 			lightSegment.graphics.beginFill(trunkColorDark, 1);
@@ -133,14 +145,14 @@ package
 			for each (ptSize in allPoints)
 			{
 				i++;
-				if (i % 10 == 1)
+				if (i % 10 == 1 || distScale == 0)
 				{
 					lightOffsetX = growTarget.x - (x + (ptSize[0].x - offset.x))
 					lightOffsetY = growTarget.y - (y + (ptSize[0].y - offset.y))
 					d = Math.sqrt(lightOffsetX * lightOffsetX + lightOffsetY * lightOffsetY);
-					lightOffsetX *= 1 / d * ptSize[1] / 3;
-					lightOffsetY *= 1 / d * ptSize[1] / 3;
-					distScale = Math.max(Math.min(1, 20 / d),0.5); // Make the circles smaller if the light is farther.
+					lightOffsetX *= 1 / d * ptSize[1] / 4;
+					lightOffsetY *= 1 / d * ptSize[1] / 4;
+					distScale = Math.max(Math.min(1.1, 20 / d),0.5); // Make the circles smaller if the light is farther.
 				}
 				if (ptSize[1] * 0.75 * distScale > 0 )
 				{
@@ -151,17 +163,18 @@ package
 			
 			// Highlight color
 			lightSegment.graphics.beginFill(trunkColorLight, 1);
+			i = 0;
 			for each (ptSize in allPoints)
 			{
 				i++;
-				if (i % 10 == 1)
+				if (i % 10 == 1 || distScale == 0 || d == 0)
 				{
 					lightOffsetX = growTarget.x - (x + (ptSize[0].x - offset.x))
 					lightOffsetY = growTarget.y - (y + (ptSize[0].y - offset.y))
 					d = Math.sqrt(lightOffsetX * lightOffsetX + lightOffsetY * lightOffsetY);
 					lightOffsetX *= 1 / d * ptSize[1] / 1.5;
 					lightOffsetY *= 1 / d * ptSize[1] / 1.5;
-					distScale = Math.max(Math.min(2, 50 / d),0.25) - 1;
+					distScale = Math.max(Math.min(2, 40 / d),0.25) - 1;
 				}
 				if (ptSize[1] * 0.25 * distScale > 0 && d < 50)
 				{
@@ -290,10 +303,10 @@ package
 			
 			gameGrowPosition = new Point(x + growPosition.x - offset.x, y + growPosition.y - offset.y);
 			
-			(FlxG.state as GameState).addTreeParticle((x + (growPosition.x - offset.x + growX)), (y + (growPosition.y - offset.y + growY)));
+			(FlxG.state as GameState).addTreeParticle((x + (growPosition.x - offset.x + growX * 10)), (y + (growPosition.y - offset.y + growY * 10)));
 			
 			// The tree path is recorded as a list of points to be rendered later with dynamic lighting
-			if (framecount % 8 == 0)
+			if (framecount % 4 == 0)
 			{
 				allPoints.push( [growPosition, growTrunkWidth] );
 			}
