@@ -34,7 +34,7 @@ package
 		[Embed (source = "../data/light_particle.png")] private var lightParticleImage:Class;
 		[Embed (source = "../data/tree_particle.png")] private var treeParticleImage:Class;
 		
-		[Embed (source = "../data/openmap.txt", mimeType="application/octet-stream")] private var openmapData:Class;
+		[Embed (source = "../data/test.txt", mimeType="application/octet-stream")] private var openmapData:Class;
 		
 		public var player:Player;
 		public var lantern:Lantern;
@@ -63,7 +63,7 @@ package
 			bgColor = 0xffd1dfe7;
 			
 			map = new FlxTilemap();		
-			currentMapString = generateEmptyMap();
+			currentMapString = new openmapData;
 			map.loadMap(currentMapString, tilesImage, 8, 8);
 			
 			entities = new FlxGroup();
@@ -95,6 +95,7 @@ package
 			
 			renumberEntities();
 			add(background);
+			add(tree.warningSprite);		
 			add(tree);
 			add(entities);	
 			add(map);
@@ -102,7 +103,7 @@ package
 			add(player);		
 			add(lantern);		
 			add(particles);		
-			add(tree.warningSprite);		
+			
 			add(editMode);	
 			add(scrollObject);
 			
@@ -117,7 +118,7 @@ package
 			FlxG.follow(scrollObject, 3);
 			FlxG.followBounds(0, 0, map.width, map.height);
 			FlxG.flash.start(0xff000000, 1);
-			FlxG.stage.quality = StageQuality.MEDIUM;
+			FlxG.stage.quality = StageQuality.HIGH;
 		}
 		
 		override public function update():void 
@@ -388,7 +389,7 @@ package
 			p.velocity.y = Math.random() * 50 - 25;
 			p.drag.x = 30;
 			p.drag.y = 30;
-			p.alpha = 0.5;
+			p.alpha = 1;
 		}
 		
 		public function addLightParticle(x:int, y:int) : void
