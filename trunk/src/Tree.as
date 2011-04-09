@@ -14,25 +14,25 @@ package
 	{
 		[Embed (source = "../data/warning.png")] private var warningImage:Class;
 		
-		/*
+		
 		private const trunkColorDark:uint = 0xff0e4a2a;
 		private const trunkColorMid:uint = 0xff217a15;
 		private const trunkColorLight:uint = 0xff75bf34;
-		*/
+		
 		/*
 		private const trunkColorDark:uint = 0xff047500;
 		private const trunkColorMid:uint = 0xff51951d;
 		private const trunkColorLight:uint = 0xffadcb44;
 		*/
-
+		/*
 		private const trunkColorDark:uint = 0xff111819;
 		private const trunkColorMid:uint = 0xff22483c;
 		private const trunkColorLight:uint = 0xff4b9a4e;		
-		
+		*/
 		
 		private const maxSize:Number = 200;
 		private const maxTrunkSize:Number = 4;
-		private const growRate:Number = 12;
+		private const growRate:Number = 13;
 		private const growAngleChangeRate:Number = Math.PI;
 		private const warningTime:Number = 0.5; // Seconds from impact at which it warns the player
 		
@@ -62,14 +62,23 @@ package
 		
 		public var doneGrowing:Boolean = false;
 		
+		public var sizLightSynth:SfxrSynth = new SfxrSynth();
+		public var sizDarkSynth:SfxrSynth = new SfxrSynth();
+		public var warnSynth:SfxrSynth = new SfxrSynth();
+		public var explodeSynth:SfxrSynth = new SfxrSynth();
+		
+		public var sizzleTimer:Number = 0;
+		public var warnTimer:Number = 0;
+		public var explodeTimer:Number = 0;
+		
 		public function Tree(x:int, y:int) 
 		{
 			super(x, y);
-			pixels = new BitmapData(300, 300, true, 0x00000000);
+			pixels = new BitmapData(1200, 1200, true, 0x00000000);
 			offset.x = pixels.width / 2;
-			offset.y = pixels.height;
+			offset.y = pixels.height / 2;
 			growTrunkSegment = new Shape();
-			growPosition = new Point(pixels.width / 2, pixels.height);
+			growPosition = new Point(pixels.width / 2, pixels.height / 2);
 			growTarget = null;
 			branches = new Array();
 			branchTimer = (2 + Math.random() * 4) / growRate;
@@ -81,6 +90,11 @@ package
 			warningSprite.offset.y = warningSprite.height / 2;
 			warningSprite.blend = "overlay";
 			lightSegment = new Shape();
+			
+			sizLightSynth.params.setSettingsString("3,,0.64,,,0.46,,-0.0799,,0.39,,-0.18,0.47,0.63,,,,,0.37,,,0.32,,0.33");
+			sizDarkSynth.params.setSettingsString("3,,0.72,,,0.2,,-0.0799,,0.26,0.09,-0.0999,0.26,0.63,,,,,0.24,,,,,0.27");
+			warnSynth.params.setSettingsString("0,0.22,0.54,,0.33,0.32,,-0.0999,,,,,0.5681,0.1,,0.31,-0.26,,1,,,,,0.33");
+			explodeSynth.params.setSettingsString("3,,0.31,0.19,0.23,0.06,,0.26,,,,-0.3399,0.74,,,0.7692,,,1,,,,,0.33");
 		}
 		
 		override public function update():void 
@@ -109,7 +123,12 @@ package
 				}
 			}
 			
-			if (currentSize >= maxSize) { doneGrowing = true; }
+			if (currentSize >= maxSize && !doneGrowing)
+			{
+				doneGrowing = true;
+				var seed:Seed = new Seed(x + growPosition.x - offset.x, y + growPosition.y - offset.y);
+				(FlxG.state as GameState).carryables.add(seed);
+			}
 
 			framecount++;
 			
@@ -156,7 +175,7 @@ package
 				}
 				if (ptSize[1] * 0.75 * distScale > 0 )
 				{
-					lightSegment.graphics.drawCircle(ptSize[0].x + lightOffsetX, ptSize[0].y + lightOffsetY, ptSize[1] * 0.75 * distScale);
+					lightSegment.graphics.drawCircle(ptSize[0].x + lightOffsetX, ptSize[0].y + lightOffsetY, ptSize[1] * 0.85 * distScale);
 				}
 			}
 			lightSegment.graphics.endFill();
@@ -232,6 +251,17 @@ package
 				// Fade out because we lost.
 				FlxG.fade.start(0xff000000, 0.75, (FlxG.state as GameState).restart, false);
 			}
+			else
+			{
+				explodeTimer += FlxG.elapsed;
+				if (explodeTimer > 0.2)
+				{
+					explodeTimer = 0
+					explodeSynth.playMutated();
+				}
+			}
+			
+			
 			calcFrame();
 		}
 		
@@ -243,7 +273,7 @@ package
 			
 			// Find out if the growth position is in shadow
 			var shadow:BitmapData = (FlxG.state as GameState).shadowMap;
-			var inShadow:Boolean = shadow.getPixel32(((x + FlxG.scroll.x) + (growPosition.x - offset.x)), ((y + FlxG.scroll.y) + (growPosition.y - offset.y))) != 0xffffffff;
+			var inShadow:Boolean = shadow.getPixel32(((x + FlxG.scroll.x) + (growPosition.x - offset.x)), ((y + FlxG.scroll.y) + (growPosition.y - offset.y))) < 0xfffffffe;
 			
 			if (growTarget != null)
 			{
@@ -294,16 +324,44 @@ package
 				warningSprite.y = y + growPosition.y - offset.y;
 				warningSprite.scale.x = (growTrunkWidth / maxTrunkSize) / 2;
 				warningSprite.scale.y = (growTrunkWidth / maxTrunkSize) / 2;
-				
+				warnTimer -= FlxG.elapsed;
+				if (warnTimer < 0)
+				{
+					warnTimer = 1;
+					warnSynth.play();
+				}
 			}
 			else
 			{
 				warningSprite.visible = false;
+				warnTimer = 0;
 			}
 			
 			gameGrowPosition = new Point(x + growPosition.x - offset.x, y + growPosition.y - offset.y);
 			
-			(FlxG.state as GameState).addTreeParticle((x + (growPosition.x - offset.x + growX * 10)), (y + (growPosition.y - offset.y + growY * 10)));
+			// Growing sound
+			//sizzleTimer += FlxG.elapsed;
+			//if (sizzleTimer > 0.05)
+			//{
+				//sizzleTimer = 0;
+				//if (inShadow) { sizDarkSynth.playMutated(0.01); }
+				//else { sizLightSynth.playMutated(0.01); }
+			//}
+			
+			if (inShadow)
+			{
+				if (Math.random() < 0.5)
+				{
+					(FlxG.state as GameState).addTreeParticle((x + (growPosition.x - offset.x + growX * 10)), (y + (growPosition.y - offset.y + growY * 10)));
+				}
+			}
+			else
+			{
+				for (var q:int = 0; q < 2; q++)
+				{
+					(FlxG.state as GameState).addTreeParticle((x + (growPosition.x - offset.x + growX * 10)), (y + (growPosition.y - offset.y + growY * 10)));
+				}
+			}
 			
 			// The tree path is recorded as a list of points to be rendered later with dynamic lighting
 			if (framecount % 4 == 0)
