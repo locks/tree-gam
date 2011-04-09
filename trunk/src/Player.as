@@ -1,6 +1,8 @@
 ﻿package  
 {
+	import flash.geom.Point;
 	import org.flixel.FlxObject;
+	import org.flixel.FlxPoint;
 	import org.flixel.FlxSprite;
 	import org.flixel.FlxG;
 	import SfxrSynth;
@@ -29,6 +31,8 @@
 		public var takeSynth:SfxrSynth = new SfxrSynth();
 		public var throwSynth:SfxrSynth = new SfxrSynth();
 		public var dropSynth:SfxrSynth = new SfxrSynth();
+		
+		public var _oldFlashPoint:Point = null;
 		
 		private var footstepTimer:Number = 0;
 		
@@ -83,7 +87,7 @@
 					if (footstepTimer > 0.19)
 					{
 						footstepTimer = 0;
-						stepSynth.playMutated(0.1, 8);
+						stepSynth.play();
 					}
 				}
 				else
@@ -183,6 +187,38 @@
 			
 		}
 		
+		override protected function renderSprite():void
+		{
+			if(_refreshBounds)
+				calcFrame();
+			
+			getScreenXY(_point);
+			_flashPoint.x = _point.x;
+			_flashPoint.y = _point.y;
+			
+			if (_oldFlashPoint != null)
+			{
+				_flashPoint.x = (_flashPoint.x + _oldFlashPoint.x) / 2;
+				//_flashPoint.y = (_flashPoint.y + _oldFlashPoint.y) / 2;
+			}
+			_oldFlashPoint = new Point(_flashPoint.x, _flashPoint.y);
+			
+			//Simple render
+			if(((angle == 0) || (_bakedRotation > 0)) && (scale.x == 1) && (scale.y == 1) && (blend == null))
+			{
+				FlxG.buffer.copyPixels(_framePixels,_flashRect,_flashPoint,null,null,true);
+				return;
+			}
+			
+			//Advanced render
+			_mtx.identity();
+			_mtx.translate(-origin.x,-origin.y);
+			_mtx.scale(scale.x,scale.y);
+			if(angle != 0) _mtx.rotate(Math.PI * 2 * (angle / 360));
+			_mtx.translate(_point.x+origin.x,_point.y+origin.y);
+			FlxG.buffer.draw(_framePixels,_mtx,null,blend,null,antialiasing);
+		}		
+
 		override public function hitBottom(Contact:FlxObject, Velocity:Number):void 
 		{
 			if (velocity.y > jumpForce / 2)
