@@ -177,7 +177,7 @@ package org.flixel
 		/**
 		 * Flag for whether the bounding box visuals need to be refreshed.
 		 */
-		static internal var _refreshBounds:Boolean;
+		static public var _refreshBounds:Boolean;
 		
 		/**
 		 * Creates a new <code>FlxObject</code>.

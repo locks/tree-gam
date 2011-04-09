@@ -148,6 +148,7 @@ package
 				player.holdObject.velocity.x = 0;
 			}
 
+			
 			shadowMap.fillRect(new Rectangle(0, 0, FlxG.width, FlxG.height), 0xfffffffe);
 			if (editMode.enabled)
 			{
@@ -189,9 +190,8 @@ package
 					}
 				}
 			}			
-			
+		
 			super.update();
-
 			
 			FlxU.collide(player, map);
 			FlxU.collide(carryables, map);
@@ -305,6 +305,11 @@ package
 			var mtx:Matrix = new Matrix(1, 0, 0, 1, screenPt.x, screenPt.y);
 			shadowMap.draw(s, mtx);
 		}			
+		
+		override public function render():void 
+		{
+			super.render();
+		}
 		
 		public function addJumpParticle(x:int, y:int, double:Boolean) : void
 		{
