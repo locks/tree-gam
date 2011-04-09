@@ -2,9 +2,12 @@ package
 {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.display.Loader;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.net.FileFilter;
+	import flash.net.URLRequest;
 	import org.flixel.FlxG;
 	import org.flixel.FlxObject;
 	import org.flixel.FlxSprite;
@@ -13,6 +16,8 @@ package
 	import flash.utils.getDefinitionByName;
 	import flash.utils.getQualifiedClassName;
 	import flash.net.FileReference;
+	import flash.events.Event;
+	import flash.net.URLLoader;
 	/**
 	 * ...
 	 * @author morgan
@@ -32,6 +37,8 @@ package
 		public var tiles:FlxTilemap;
 		public var currTileIndex:int = 1;
 		public var tilebg:FlxSprite;
+		
+		private var loadf:FileReference;
 		
 		public function EditMode() 
 		{
@@ -147,13 +154,42 @@ package
 						currTileIndex--;
 					}
 				}
-				if (FlxG.keys.justPressed("S"))
+				if (FlxG.keys.CONTROL && FlxG.keys.justPressed("S"))
 				{
 					//trace(getMapString());
-					var f:FileReference = new FileReference();
-					f.save(getMapString());
+					var savef:FileReference = new FileReference();
+					savef.save(getMapString());
+				}
+				if (FlxG.keys.CONTROL && FlxG.keys.justPressed("L"))
+				{
+					loadf = new FileReference();
+					loadf.addEventListener ( Event.SELECT, onFileSelected ) ;
+					loadf.browse( [ new FileFilter("Level", "*.txt") ]);
 				}
 			}
+		}
+		
+		private function onFileSelected( e:Event ) : void
+		{
+			//loadf.load();
+			//loadf.addEventListener( Event.COMPLETE, onFileLoaded);
+			var loader:URLLoader = new URLLoader();
+			loader.addEventListener(Event.COMPLETE, onMapLoaded);
+			loader.load(new URLRequest("../data/" + (FileReference)(e.target).name));
+		}
+		
+		private function onFileLoaded( e:Event ) : void		
+		{
+			var tempref:FileReference = FileReference(e.target);
+			var loader:URLLoader = new URLLoader();
+			loader.addEventListener(Event.COMPLETE, onMapLoaded);
+		}
+		
+		private function onMapLoaded( e:Event ) : void
+		{
+			(FlxG.state as GameState).currentMapString = e.target.data;
+			(FlxG.state as GameState).map.loadMap((FlxG.state as GameState).currentMapString, tilesImage, 8, 8);
+			toggle();
 		}
 		
 		public function getMapString() : String

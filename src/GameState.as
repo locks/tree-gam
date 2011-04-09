@@ -19,6 +19,8 @@ package
 	import flash.display.StageQuality;
 	import flash.utils.getDefinitionByName;
 	import flash.utils.getQualifiedClassName;
+	import SfxrSynth;
+	import SfxrParams;
 	/**
 	* ...
 	* @author Thomas Liu
@@ -42,6 +44,7 @@ package
 		public var shadowMap:BitmapData; 
 		public var overlay:FlxSprite;
 		public var particles:FlxGroup;
+		public var treeGroup:FlxGroup;
 		public var entities:FlxGroup;
 		public var editMode:EditMode;
 		public var background:FlxSprite;
@@ -53,9 +56,11 @@ package
 		public var scrollObject:FlxSprite;
 		
 		public var currentTree:Tree;
+		public var carryables:FlxGroup;
 		
 		public var mapEntities:Array = [
-			FirePit
+			FirePit,
+			Spawn
 		]
 		
 		public function GameState() 
@@ -67,21 +72,22 @@ package
 			map.loadMap(currentMapString, tilesImage, 8, 8);
 			
 			entities = new FlxGroup();
+			carryables = new FlxGroup();
+			treeGroup = new FlxGroup();
 			shadowMap = new BitmapData(FlxG.width, FlxG.height, true, 0x55000000);
 			player = new Player(50, map.height - 16);
-			lantern = new Lantern(50, 50);
+			lantern = new Lantern(42, map.height - 16);
 			background = new FlxSprite(0, 8, bgImage);
 			background.scrollFactor.x = background.scrollFactor.y = 0.5;
-			var tree:Tree = new Tree(30, map.height - 8);			
-			currentTree = tree;
+			//var tree:Tree = new Tree(30, map.height - 8);			
+			//currentTree = tree;
 			var lightEmission:FlxSprite = new FlxSprite(0, 0, lightImage);
 			
 			lightEmission.blend = "screen";
 			lightEmission.alpha = 0.5;
 			lantern.lightEmission = lightEmission;
 			
-			player.holdObject = lantern;
-			tree.growTarget = lantern;
+			//tree.growTarget = lantern;
 
 			scrollObject = new FlxSprite(0, 0);
 			scrollObject.visible = false;
@@ -93,15 +99,16 @@ package
 		
 			editMode = new EditMode(); // The editor is a mode in the game
 			
+			carryables.add(lantern);
+			
 			renumberEntities();
 			add(background);
-			add(tree.warningSprite);		
-			add(tree);
+			add(treeGroup);
 			add(entities);	
 			add(map);
 			add(lightEmission);
 			add(player);		
-			add(lantern);		
+			add(carryables);
 			add(particles);		
 			
 			add(editMode);	
@@ -141,7 +148,7 @@ package
 				player.holdObject.velocity.x = 0;
 			}
 
-			shadowMap.fillRect(new Rectangle(0, 0, FlxG.width, FlxG.height), 0xffffffff);
+			shadowMap.fillRect(new Rectangle(0, 0, FlxG.width, FlxG.height), 0xfffffffe);
 			if (editMode.enabled)
 			{
 				scrollObject.x = player.x;
@@ -151,24 +158,26 @@ package
 			{
 				if (!ending)
 				{
+					shadowMap.fillRect(new Rectangle(0, 0, FlxG.width, FlxG.height), 0xff4d3781);
 					drawShadows();
-					var psx:int = 0;
-					var psy:int = 0;
-
-					if ( Math.abs(lantern.x - currentTree.gameGrowPosition.x) > 70
-					|| Math.abs(lantern.y - currentTree.gameGrowPosition.y) > 100
-					|| currentTree.doneGrowing)
+					var psx:int = lantern.x;
+					var psy:int = lantern.y;
+					if (currentTree)
 					{
-						psx = lantern.x;
-						psy = lantern.y;
+						if (Math.abs(lantern.x - currentTree.gameGrowPosition.x) > 70
+						|| Math.abs(lantern.y - currentTree.gameGrowPosition.y) > 100
+						|| currentTree.doneGrowing )
+						{
+							psx = lantern.x;
+							psy = lantern.y;
+						}
+						else
+						{
+							psx = (lantern.x + currentTree.gameGrowPosition.x) / 2;
+							psy = (lantern.y + currentTree.gameGrowPosition.y) / 2;				
+						}
 					}
-					else
-					{
-						psx = (lantern.x + currentTree.gameGrowPosition.x) / 2;
-						psy = (lantern.y + currentTree.gameGrowPosition.y) / 2;				
-					}
-
-					if ( Math.abs(psx - player.x) > 50 || Math.abs(psy - player.y) > 50 )
+					if ( Math.abs(psx - player.x) > 45 || Math.abs(psy - player.y) > 50 )
 					{
 						scrollObject.x = player.x;
 						scrollObject.y = player.y;
@@ -185,9 +194,9 @@ package
 
 			
 			FlxU.collide(player, map);
-			FlxU.collide(lantern, map);
+			FlxU.collide(carryables, map);
 			FlxU.collide(player, entities);
-			FlxU.collide(lantern, entities);
+			FlxU.collide(carryables, entities);
 			
 		}
 		
@@ -202,96 +211,23 @@ package
 			return map._data;
 		}
 		
-		public function drawShadows2():void 
-		{
-			
-			var px:int = lantern.x + 1;
-			var py:int = lantern.y + 1;
-			
-			var s:Shape = new Shape();
-			
-			for (var r:int = 0; r < map.widthInTiles; r++) {
-				for (var c:int = 0; c < map.heightInTiles; c++) {
-					var corners:Array = getCorners(r, c);
-					if (map.getTile(r, c) != 0) {
-						var rect:Array = new Array();
-						var tl:FlxPoint = corners[0]
-						var tr:FlxPoint = corners[1]
-						var bl:FlxPoint = corners[2]
-						var br:FlxPoint = corners[3]
-						var extra:FlxPoint = null;
-						if (px <= tl.x && py <= tl.y) {
-							rect.push(tr);
-							rect.push(bl);
-							extra = new FlxPoint(br.x, br.y);
-						} else if (py <= tr.y && px > tl.x && px < tr.x) {
-							rect.push(bl);
-							rect.push(br);
-						} else if (px >= tr.x && py <= tr.y) {
-							rect.push(tl);
-							rect.push(br);
-							extra = new FlxPoint(bl.x, bl.y);
-						} else if (px <= tl.x && py < bl.y && py > tl.y) {
-							rect.push(tr);
-							rect.push(br);
-						} else if (px >= tr.x && py < br.y && py > tr.y) {
-							rect.push(tl);
-							rect.push(bl);
-						} else if (px <= bl.x && py >= bl.y) {
-							rect.push(tl);
-							rect.push(br);
-							extra = new FlxPoint(tr.x, tr.y);
-						} else if (px > bl.x && px < br.x && py >= bl.y) {
-							rect.push(tl);
-							rect.push(tr);
-						} else if (px >= br.x && py  >= br.y) {
-							rect.push(bl);
-							rect.push(tr);
-							extra = new FlxPoint(tl.x, tl.y);
-						}else { continue; }
-						
-
-					
-						var corner1:FlxPoint = rect[0] as FlxPoint;
-						var corner2:FlxPoint = rect[1] as FlxPoint;
-						var corner3:FlxPoint = new FlxPoint((corner1.x - px) * 100 + corner1.x, (corner1.y - py) * 100 + corner1.y);
-						var corner4:FlxPoint = new FlxPoint((corner2.x - px) * 100 + corner2.x, (corner2.y - py) * 100 + corner2.y);
-						
-						s.graphics.beginFill(0xff4d3781, 1);
-						s.graphics.lineStyle(1, 0xff4d3781, 0);
-						
-						// 1 2 4 3
-						s.graphics.moveTo(corner1.x, corner1.y);
-						if (extra != null) {
-							s.graphics.lineTo(extra.x, extra.y);
-						}
-						s.graphics.lineTo(corner2.x, corner2.y);
-						s.graphics.lineTo(corner4.x, corner4.y);
-						s.graphics.lineTo(corner3.x, corner3.y);
-						
-
-						s.graphics.endFill();
-						
-						
-					}
-				}
-			}
-			var screenPt:FlxPoint = getScreenXY(0, 0);
-			var mtx:Matrix = new Matrix(1, 0, 0, 1, screenPt.x, screenPt.y);
-			shadowMap.draw(s, mtx);
-		}	
-		
 		public function drawShadows():void 
 		{
 			
 			var px:int = lantern.x + 1;
 			var py:int = lantern.y + 1;
 			
+			
 			var s:Shape = new Shape();
+			
+			s.graphics.beginFill(0xfffffffe, 1);
+			s.graphics.drawCircle(px, py, 64);
+			s.graphics.endFill();
 			
 			for (var i:int = 0; i < filledTiles.length; i++ ) {
 				var c:int = filledTiles[i] / map.widthInTiles;
 				var r:int = filledTiles[i] % map.widthInTiles;
+				if ( Math.abs(r - px / 8) > 8 || Math.abs(c - py / 8) > 8) { continue; }
 				var corners:Array = getCorners(r, c);
 				if (map.getTile(r, c) != 0) {
 					var rect:Array = new Array();
